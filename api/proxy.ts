@@ -1,4 +1,4 @@
-
+module.exports = async function (request, response) {
   const { query } = request;
   const { api_key, url, ...rest } = query;
 
