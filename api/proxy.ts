@@ -1,6 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function (request: VercelRequest, response: VercelResponse) {
   const { query } = request;
   const { api_key, url, ...rest } = query;
 
@@ -20,11 +18,11 @@ export default async function (request: VercelRequest, response: VercelResponse)
   // Construct ScraperAPI URL
   const scraperApiUrl = new URL('https://api.scraperapi.com/');
   scraperApiUrl.searchParams.append('api_key', SCRAPERAPI_KEY);
-  scraperApiUrl.searchParams.append('url', url as string);
+  scraperApiUrl.searchParams.append('url', url);
 
   // Add other query parameters
   for (const key in rest) {
-    scraperApiUrl.searchParams.append(key, rest[key] as string);
+    scraperApiUrl.searchParams.append(key, rest[key]);
   }
 
   try {
