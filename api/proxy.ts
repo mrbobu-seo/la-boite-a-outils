@@ -48,8 +48,8 @@
       response.setHeader(name, value);
     });
 
-    // Stream the response body
-    scraperApiResponse.body?.pipeTo(response.writable);
+    const responseBody = await scraperApiResponse.text();
+    response.send(responseBody);
 
   } catch (error) {
     console.error('Proxy error:', error);
