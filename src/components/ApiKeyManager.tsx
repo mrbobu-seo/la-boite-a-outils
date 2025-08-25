@@ -30,9 +30,15 @@ export const ApiKeyManager = ({ onApiKeySet, hasValidKey }: ApiKeyManagerProps) 
   const testApiKey = async (keyToTest: string) => {
     setIsTestingKey(true);
     try {
-      // Test simple avec ScraperAPI
-      const testUrl = `http://api.scraperapi.com/?api_key=${keyToTest}&url=https://httpbin.org/ip`;
-      const response = await fetch(testUrl);
+      // Test avec proxy CORS pour éviter les erreurs de navigateur
+      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+      const testUrl = `${proxyUrl}http://api.scraperapi.com/?api_key=${keyToTest}&url=https://httpbin.org/ip`;
+      
+      const response = await fetch(testUrl, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
       
       if (response.ok) {
         localStorage.setItem('scraperapi_key', keyToTest);
@@ -109,8 +115,8 @@ export const ApiKeyManager = ({ onApiKeySet, hasValidKey }: ApiKeyManagerProps) 
       <Alert className="mb-6 border-orange-500/20 bg-orange-500/10">
         <AlertTriangle className="h-4 w-4 text-orange-500" />
         <AlertDescription className="text-orange-200">
-          <strong>Sécurité :</strong> Votre clé API sera stockée localement dans votre navigateur. 
-          Pour une sécurité optimale, connectez-vous à{' '}
+          <strong>Proxy CORS :</strong> Cette app utilise un proxy temporaire pour contourner les restrictions CORS. 
+          Pour une solution production sécurisée, connectez-vous à{' '}
           <a 
             href="https://docs.lovable.dev/supabase/setup" 
             className="text-primary hover:underline inline-flex items-center gap-1"
