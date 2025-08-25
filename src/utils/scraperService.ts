@@ -2,8 +2,7 @@ import { SearchParams, ScrapingResults, SearchResult, ScrapedPageInfo } from '@/
 
 // Service pour le scraping réel avec ScraperAPI
 export class ScraperService {
-  private static readonly API_BASE_URL = 'https://cors-anywhere.herokuapp.com/http://api.scraperapi.com/';
-  private static readonly CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
+  private static readonly API_BASE_URL = 'http://api.scraperapi.com/';
 
   // Obtenir la clé API depuis localStorage
   static getApiKey(): string | null {
