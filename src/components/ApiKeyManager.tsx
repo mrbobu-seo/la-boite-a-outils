@@ -1,0 +1,171 @@
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/components/ui/use-toast';
+import { Key, AlertTriangle, CheckCircle, ExternalLink } from 'lucide-react';
+
+interface ApiKeyManagerProps {
+  onApiKeySet: (apiKey: string) => void;
+  hasValidKey: boolean;
+}
+
+export const ApiKeyManager = ({ onApiKeySet, hasValidKey }: ApiKeyManagerProps) => {
+  const [apiKey, setApiKey] = useState('');
+  const [isTestingKey, setIsTestingKey] = useState(false);
+  const [showKeyInput, setShowKeyInput] = useState(!hasValidKey);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Charger la clé API depuis localStorage au démarrage
+    const savedKey = localStorage.getItem('scraperapi_key');
+    if (savedKey) {
+      setApiKey(savedKey);
+      onApiKeySet(savedKey);
+    }
+  }, [onApiKeySet]);
+
+  const testApiKey = async (keyToTest: string) => {
+    setIsTestingKey(true);
+    try {
+      // Test simple avec ScraperAPI
+      const testUrl = `http://api.scraperapi.com/?api_key=${keyToTest}&url=https://httpbin.org/ip`;
+      const response = await fetch(testUrl);
+      
+      if (response.ok) {
+        localStorage.setItem('scraperapi_key', keyToTest);
+        onApiKeySet(keyToTest);
+        setShowKeyInput(false);
+        toast({
+          title: "Clé API validée",
+          description: "Votre clé ScraperAPI est fonctionnelle !",
+        });
+        return true;
+      } else {
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur de validation",
+        description: "Clé API invalide ou problème de connexion",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsTestingKey(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!apiKey.trim()) return;
+    await testApiKey(apiKey.trim());
+  };
+
+  const handleRemoveKey = () => {
+    localStorage.removeItem('scraperapi_key');
+    setApiKey('');
+    onApiKeySet('');
+    setShowKeyInput(true);
+    toast({
+      title: "Clé API supprimée",
+      description: "Vous devez configurer une nouvelle clé API",
+    });
+  };
+
+  if (hasValidKey && !showKeyInput) {
+    return (
+      <Card className="glass-card p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="h-5 w-5 text-green-500" />
+            <div>
+              <h3 className="font-semibold">Clé API configurée</h3>
+              <p className="text-sm text-muted-foreground">ScraperAPI est prêt à utiliser</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowKeyInput(true)}>
+              Changer
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleRemoveKey}>
+              Supprimer
+            </Button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="glass-card p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <Key className="h-6 w-6 text-primary" />
+        <h2 className="text-2xl font-bold gradient-text">Configuration API</h2>
+      </div>
+
+      <Alert className="mb-6 border-orange-500/20 bg-orange-500/10">
+        <AlertTriangle className="h-4 w-4 text-orange-500" />
+        <AlertDescription className="text-orange-200">
+          <strong>Sécurité :</strong> Votre clé API sera stockée localement dans votre navigateur. 
+          Pour une sécurité optimale, connectez-vous à{' '}
+          <a 
+            href="https://docs.lovable.dev/supabase/setup" 
+            className="text-primary hover:underline inline-flex items-center gap-1"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Supabase <ExternalLink className="h-3 w-3" />
+          </a>
+        </AlertDescription>
+      </Alert>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="apiKey">Clé API ScraperAPI</Label>
+          <Input
+            id="apiKey"
+            type="password"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="Entrez votre clé API ScraperAPI"
+            className="transition-all duration-300 focus:ring-2 focus:ring-primary/50"
+            required
+          />
+          <p className="text-xs text-muted-foreground">
+            Obtenez votre clé sur{' '}
+            <a 
+              href="https://www.scraperapi.com" 
+              className="text-primary hover:underline"
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              scraperapi.com
+            </a>
+          </p>
+        </div>
+
+        <Button
+          type="submit"
+          disabled={isTestingKey || !apiKey.trim()}
+          variant="neon"
+          className="w-full"
+        >
+          {isTestingKey ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+              Test en cours...
+            </>
+          ) : (
+            <>
+              <Key className="h-4 w-4" />
+              Valider et configurer
+            </>
+          )}
+        </Button>
+      </form>
+    </Card>
+  );
+};

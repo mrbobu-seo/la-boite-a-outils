@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SearchForm } from '@/components/SearchForm';
 import { ResultsDisplay } from '@/components/ResultsDisplay';
+import { ApiKeyManager } from '@/components/ApiKeyManager';
 import { SearchParams, ScrapingResults } from '@/types/scraper';
 import { ScraperService } from '@/utils/scraperService';
 import { useToast } from '@/components/ui/use-toast';
@@ -11,8 +12,29 @@ const Index = () => {
   const { toast } = useToast();
   const [results, setResults] = useState<ScrapingResults | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasValidApiKey, setHasValidApiKey] = useState(false);
+  const [currentApiKey, setCurrentApiKey] = useState<string>('');
+
+  useEffect(() => {
+    // Vérifier la clé API au chargement
+    setHasValidApiKey(ScraperService.hasValidApiKey());
+  }, []);
+
+  const handleApiKeySet = (apiKey: string) => {
+    setCurrentApiKey(apiKey);
+    setHasValidApiKey(!!apiKey);
+  };
 
   const handleSearch = async (params: SearchParams) => {
+    if (!hasValidApiKey) {
+      toast({
+        title: "Clé API requise",
+        description: "Veuillez configurer votre clé ScraperAPI",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const errors = ScraperService.validateSearchParams(params);
     
     if (errors.length > 0) {
@@ -109,7 +131,8 @@ const Index = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-6xl mx-auto space-y-12">
-          <SearchForm onSearch={handleSearch} isLoading={isLoading} />
+          <ApiKeyManager onApiKeySet={handleApiKeySet} hasValidKey={hasValidApiKey} />
+          {hasValidApiKey && <SearchForm onSearch={handleSearch} isLoading={isLoading} />}
           <ResultsDisplay results={results} />
         </div>
       </main>
