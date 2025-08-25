@@ -7,10 +7,25 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { Key, AlertTriangle, CheckCircle, ExternalLink } from 'lucide-react';
 
-export const ApiKeyManager = () => {
+interface ApiKeyManagerProps {
+  onApiKeySet: (apiKey: string) => void;
+  hasValidKey: boolean;
+}
+
+export const ApiKeyManager = ({ onApiKeySet, hasValidKey }: ApiKeyManagerProps) => {
   const [apiKey, setApiKey] = useState('');
   const [isTestingKey, setIsTestingKey] = useState(false);
+  const [showKeyInput, setShowKeyInput] = useState(!hasValidKey);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Charger la clé API depuis localStorage au démarrage
+    const savedKey = localStorage.getItem('scraperapi_key');
+    if (savedKey) {
+      setApiKey(savedKey);
+      onApiKeySet(savedKey);
+    }
+  }, [onApiKeySet]);
 
   const testApiKey = async (keyToTest: string) => {
     setIsTestingKey(true);
@@ -20,6 +35,9 @@ export const ApiKeyManager = () => {
       const response = await fetch(testUrl);
       
       if (response.ok) {
+        localStorage.setItem('scraperapi_key', keyToTest);
+        onApiKeySet(keyToTest);
+        setShowKeyInput(false);
         toast({
           title: "Clé API validée",
           description: "Votre clé ScraperAPI est fonctionnelle !",
@@ -46,6 +64,41 @@ export const ApiKeyManager = () => {
     if (!apiKey.trim()) return;
     await testApiKey(apiKey.trim());
   };
+
+  const handleRemoveKey = () => {
+    localStorage.removeItem('scraperapi_key');
+    setApiKey('');
+    onApiKeySet('');
+    setShowKeyInput(true);
+    toast({
+      title: "Clé API supprimée",
+      description: "Vous devez configurer une nouvelle clé API",
+    });
+  };
+
+  if (hasValidKey && !showKeyInput) {
+    return (
+      <Card className="glass-card p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="h-5 w-5 text-green-500" />
+            <div>
+              <h3 className="font-semibold">Clé API configurée</h3>
+              <p className="text-sm text-muted-foreground">ScraperAPI est prêt à utiliser</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowKeyInput(true)}>
+              Changer
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleRemoveKey}>
+              Supprimer
+            </Button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="glass-card p-6">
