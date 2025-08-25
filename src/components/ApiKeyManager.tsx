@@ -7,49 +7,27 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { Key, AlertTriangle, CheckCircle, ExternalLink } from 'lucide-react';
 
-interface ApiKeyManagerProps {
-  onApiKeySet: (apiKey: string) => void;
-  hasValidKey: boolean;
-}
-
-export const ApiKeyManager = ({ onApiKeySet, hasValidKey }: ApiKeyManagerProps) => {
+export const ApiKeyManager = () => {
   const [apiKey, setApiKey] = useState('');
   const [isTestingKey, setIsTestingKey] = useState(false);
-  const [showKeyInput, setShowKeyInput] = useState(!hasValidKey);
   const { toast } = useToast();
-
-  useEffect(() => {
-    // Charger la clé API depuis localStorage au démarrage
-    const savedKey = localStorage.getItem('scraperapi_key');
-    if (savedKey) {
-      setApiKey(savedKey);
-      onApiKeySet(savedKey);
-    }
-  }, [onApiKeySet]);
 
   const testApiKey = async (keyToTest: string) => {
     setIsTestingKey(true);
     try {
-      // Test avec proxy CORS pour éviter les erreurs de navigateur
-      const testUrl = `https://api.scraperapi.com/?api_key=${keyToTest}&url=https://httpbin.org/ip`;
+      const testUrl = `/api/proxy?api_key=${keyToTest}&url=https://httpbin.org/ip`;
       
-      const response = await fetch(testUrl, {
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      });
+      const response = await fetch(testUrl);
       
       if (response.ok) {
-        localStorage.setItem('scraperapi_key', keyToTest);
-        onApiKeySet(keyToTest);
-        setShowKeyInput(false);
         toast({
           title: "Clé API validée",
           description: "Votre clé ScraperAPI est fonctionnelle !",
         });
         return true;
       } else {
-        throw new Error(`HTTP ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
       }
     } catch (error) {
       toast({
@@ -69,41 +47,6 @@ export const ApiKeyManager = ({ onApiKeySet, hasValidKey }: ApiKeyManagerProps) 
     await testApiKey(apiKey.trim());
   };
 
-  const handleRemoveKey = () => {
-    localStorage.removeItem('scraperapi_key');
-    setApiKey('');
-    onApiKeySet('');
-    setShowKeyInput(true);
-    toast({
-      title: "Clé API supprimée",
-      description: "Vous devez configurer une nouvelle clé API",
-    });
-  };
-
-  if (hasValidKey && !showKeyInput) {
-    return (
-      <Card className="glass-card p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="h-5 w-5 text-green-500" />
-            <div>
-              <h3 className="font-semibold">Clé API configurée</h3>
-              <p className="text-sm text-muted-foreground">ScraperAPI est prêt à utiliser</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowKeyInput(true)}>
-              Changer
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleRemoveKey}>
-              Supprimer
-            </Button>
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
   return (
     <Card className="glass-card p-6">
       <div className="flex items-center gap-3 mb-4">
@@ -111,19 +54,11 @@ export const ApiKeyManager = ({ onApiKeySet, hasValidKey }: ApiKeyManagerProps) 
         <h2 className="text-2xl font-bold gradient-text">Configuration API</h2>
       </div>
 
-      <Alert className="mb-6 border-orange-500/20 bg-orange-500/10">
-        <AlertTriangle className="h-4 w-4 text-orange-500" />
-        <AlertDescription className="text-orange-200">
-          <strong>Proxy CORS :</strong> Cette app utilise un proxy temporaire pour contourner les restrictions CORS. 
-          Pour une solution production sécurisée, connectez-vous à{' '}
-          <a 
-            href="https://docs.lovable.dev/supabase/setup" 
-            className="text-primary hover:underline inline-flex items-center gap-1"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Supabase <ExternalLink className="h-3 w-3" />
-          </a>
+      <Alert className="mb-6 border-blue-500/20 bg-blue-500/10">
+        <AlertTriangle className="h-4 w-4 text-blue-500" />
+        <AlertDescription className="text-blue-200">
+          <strong>Proxy Serverless :</strong> Cette application utilise désormais un proxy serverless pour communiquer avec ScraperAPI.
+          Votre clé API est sécurisée et n'est pas exposée côté client.
         </AlertDescription>
       </Alert>
 

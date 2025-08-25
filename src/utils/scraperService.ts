@@ -2,7 +2,7 @@ import { SearchParams, ScrapingResults, SearchResult, ScrapedPageInfo } from '@/
 
 // Service pour le scraping réel avec ScraperAPI
 export class ScraperService {
-  private static readonly API_BASE_URL = 'https://api.scraperapi.com/';
+  private static readonly API_BASE_URL = '/api/proxy';
 
   // Obtenir la clé API depuis localStorage
   static getApiKey(): string | null {
@@ -17,13 +17,8 @@ export class ScraperService {
 
   // Effectuer une recherche Google via ScraperAPI
   static async searchGoogle(params: SearchParams): Promise<string> {
-    const apiKey = this.getApiKey();
-    if (!apiKey) {
-      throw new Error('Clé API non configurée');
-    }
-
     const googleUrl = `https://www.google.${params.tld}/search?q=${encodeURIComponent(params.query)}&hl=${params.language}&gl=${params.countryCode}`;
-    const scraperUrl = `${this.API_BASE_URL}?api_key=${apiKey}&url=${encodeURIComponent(googleUrl)}&render=false`;
+    const scraperUrl = `${this.API_BASE_URL}?url=${encodeURIComponent(googleUrl)}&render=false`;
 
     console.log('Scraping Google SERP:', googleUrl);
 
@@ -44,14 +39,9 @@ export class ScraperService {
 
   // Scraper une page web individuelle
   static async scrapePage(url: string): Promise<ScrapedPageInfo | null> {
-    const apiKey = this.getApiKey();
-    if (!apiKey) {
-      throw new Error('Clé API non configurée');
-    }
-
     try {
       console.log('Scraping page:', url);
-      const scraperUrl = `${this.API_BASE_URL}?api_key=${apiKey}&url=${encodeURIComponent(url)}&render=false`;
+      const scraperUrl = `${this.API_BASE_URL}?url=${encodeURIComponent(url)}&render=false`;
 
       const response = await fetch(scraperUrl, {
         method: 'GET',
@@ -140,9 +130,6 @@ export class ScraperService {
 
   // Effectuer une recherche complète avec scraping des pages
   static async searchAndScrape(params: SearchParams): Promise<ScrapingResults> {
-    if (!this.hasValidApiKey()) {
-      throw new Error('Clé API non configurée');
-    }
 
     console.log('Démarrage du scraping pour:', params.query);
 
