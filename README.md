@@ -1,73 +1,67 @@
 # La boite à outil
 
-## Project info
+"La boite à outil" est une suite d'outils intelligents conçus pour l'analyse et l'extraction de données web. Actuellement, elle intègre un puissant scraper SEO qui vous permet de :
 
-**URL**: https://lovable.dev/projects/0131f836-046a-42c0-b553-c8ef7384cad5
+*   **Scraper les résultats des moteurs de recherche (SERP)** : Obtenez des données précises sur les classements et les informations affichées par Google.
+*   **Analyser les pages concurrentes** : Extrayez des informations clés telles que les titres, méta-descriptions, et la structure des balises Hn de n'importe quelle page web.
+*   **Exporter vos données** : Toutes les données collectées peuvent être facilement exportées au format JSON pour une analyse approfondie ou une intégration dans d'autres outils.
 
-## How can I edit this code?
+Cet outil est conçu pour les professionnels du SEO, les analystes de données et toute personne ayant besoin d'extraire des informations structurées du web de manière efficace et sécurisée.
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## Contact
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/0131f836-046a-42c0-b553-c8ef7384cad5) and start prompting.
+Pour toute question ou suggestion, n'hésitez pas à me contacter sur Twitter : [@MisteurBobu](https://x.com/MisteurBobu)
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## Comment éditer ce code ?
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Il existe plusieurs façons d'éditer votre application.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+**Utilisez votre IDE préféré**
 
-Follow these steps:
+Si vous souhaitez travailler localement en utilisant votre propre IDE, vous pouvez cloner ce dépôt et pousser les modifications.
+
+La seule exigence est d'avoir Node.js & npm installés - [installer avec nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+Suivez ces étapes :
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Étape 1 : Clonez le dépôt en utilisant l'URL Git du projet.
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
+# Étape 2 : Naviguez vers le répertoire du projet.
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
+# Étape 3 : Installez les dépendances nécessaires.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Étape 4 : Démarrez le serveur de développement avec rechargement automatique et un aperçu instantané.
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+**Éditez un fichier directement sur GitHub**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- Naviguez vers le(s) fichier(s) désiré(s).
+- Cliquez sur le bouton "Éditer" (icône crayon) en haut à droite de la vue du fichier.
+- Effectuez vos modifications et "commitez" les changements.
 
-**Use GitHub Codespaces**
+**Utilisez GitHub Codespaces**
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Naviguez vers la page principale de votre dépôt.
+- Cliquez sur le bouton "Code" (bouton vert) en haut à droite.
+- Sélectionnez l'onglet "Codespaces".
+- Cliquez sur "New codespace" pour lancer un nouvel environnement Codespace.
+- Éditez les fichiers directement dans Codespaces et "commitez" et "pushez" vos modifications une fois que vous avez terminé.
 
-## What technologies are used for this project?
+## Quelles technologies sont utilisées pour ce projet ?
 
-This project is built with:
+Ce projet est construit avec :
 
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/0131f836-046a-42c0-b553-c8ef7384cad5) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
