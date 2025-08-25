@@ -2,76 +2,21 @@ import { useState, useEffect } from 'react';
 import { SearchForm } from '@/components/SearchForm';
 import { ResultsDisplay } from '@/components/ResultsDisplay';
 import { ApiKeyManager } from '@/components/ApiKeyManager';
-import { SearchParams, ScrapingResults } from '@/types/scraper';
 import { ScraperService } from '@/utils/scraperService';
-import { useToast } from '@/components/ui/use-toast';
+import { useScraper } from '@/hooks/useScraper';
 import heroImage from '@/assets/hero-scraper.jpg';
 import { Bot, Zap, Globe, Download } from 'lucide-react';
 
 const Index = () => {
-  const { toast } = useToast();
-  const [results, setResults] = useState<ScrapingResults | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [hasValidApiKey, setHasValidApiKey] = useState(false);
-  const [currentApiKey, setCurrentApiKey] = useState<string>('');
+  const { results, isLoading, search } = useScraper({ hasValidApiKey });
 
   useEffect(() => {
-    // Vérifier la clé API au chargement
     setHasValidApiKey(ScraperService.hasValidApiKey());
   }, []);
 
   const handleApiKeySet = (apiKey: string) => {
-    setCurrentApiKey(apiKey);
     setHasValidApiKey(!!apiKey);
-  };
-
-  const handleSearch = async (params: SearchParams) => {
-    if (!hasValidApiKey) {
-      toast({
-        title: "Clé API requise",
-        description: "Veuillez configurer votre clé ScraperAPI",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const errors = ScraperService.validateSearchParams(params);
-    
-    if (errors.length > 0) {
-      toast({
-        title: "Erreur de validation",
-        description: errors.join(', '),
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    setResults(null);
-
-    try {
-      toast({
-        title: "Scraping démarré",
-        description: `Recherche en cours pour: "${params.query}"`,
-      });
-
-      const scrapingResults = await ScraperService.searchAndScrape(params);
-      setResults(scrapingResults);
-
-      toast({
-        title: "Scraping terminé",
-        description: `${scrapingResults.organic_results.length} résultats trouvés`,
-      });
-    } catch (error) {
-      console.error('Erreur lors du scraping:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors du scraping",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -132,7 +77,7 @@ const Index = () => {
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-6xl mx-auto space-y-12">
           <ApiKeyManager onApiKeySet={handleApiKeySet} hasValidKey={hasValidApiKey} />
-          {hasValidApiKey && <SearchForm onSearch={handleSearch} isLoading={isLoading} />}
+          {hasValidApiKey && <SearchForm onSearch={search} isLoading={isLoading} />}
           <ResultsDisplay results={results} />
         </div>
       </main>
