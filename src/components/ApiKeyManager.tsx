@@ -31,7 +31,7 @@ export const ApiKeyManager = ({ onApiKeySet, hasValidKey }: ApiKeyManagerProps) 
     setIsTestingKey(true);
     try {
       // Test avec proxy CORS pour éviter les erreurs de navigateur
-      const testUrl = `http://api.scraperapi.com/?api_key=${keyToTest}&url=https://httpbin.org/ip`;
+      const testUrl = `https://api.scraperapi.com/?api_key=${keyToTest}&url=https://httpbin.org/ip`;
       
       const response = await fetch(testUrl, {
         headers: {
