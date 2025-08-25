@@ -43,9 +43,11 @@ module.exports = async function (request, response) {
       });
     }
 
-    // Forward headers from ScraperAPI response
+    // Forward headers from ScraperAPI response, excluding Content-Encoding
     scraperApiResponse.headers.forEach((value, name) => {
-      response.setHeader(name, value);
+      if (name.toLowerCase() !== 'content-encoding') {
+        response.setHeader(name, value);
+      }
     });
 
     const responseBody = await scraperApiResponse.text();
