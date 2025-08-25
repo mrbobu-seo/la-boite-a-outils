@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# La boite à outil
 
 ## Project info
 

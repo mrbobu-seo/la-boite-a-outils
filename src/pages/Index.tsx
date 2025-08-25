@@ -36,11 +36,11 @@ const Index = () => {
             </div>
             
             <h1 className="text-6xl font-bold mb-6 gradient-text">
-              Web Scraper Pro
+              La boite à outil
             </h1>
             
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Analysez et extrayez des données de millions de pages web avec notre outil de scraping intelligent. 
+              La boite à outil - Analysez et extrayez des données de millions de pages web avec notre outil de scraping intelligent. 
               Recherchez, analysez et exportez en quelques clics.
             </p>
 
@@ -86,7 +86,7 @@ const Index = () => {
       <footer className="border-t border-border/50 py-8 mt-20">
         <div className="container mx-auto px-4 text-center">
           <p className="text-muted-foreground">
-            Web Scraper Pro - Outil de scraping intelligent pour l'analyse web
+            La boite à outil - Outil de scraping intelligent pour l'analyse web
           </p>
         </div>
       </footer>
