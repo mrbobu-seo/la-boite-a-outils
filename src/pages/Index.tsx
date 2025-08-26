@@ -8,6 +8,7 @@ import { useScraper } from '@/hooks/useScraper';
 import heroImage from '@/assets/hero-scraper.jpg';
 import { Bot, Zap, Globe, Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ScraperLogsDisplay from '@/components/ScraperLogsDisplay';
 
 const Index = () => {
   const [hasValidApiKey, setHasValidApiKey] = useState(false);
@@ -25,7 +26,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-12 text-center">
         <h1 className="text-5xl font-bold mb-4 gradient-text">
-          La boite à outil
+          La boite à outils
         </h1>
         <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
           Votre suite d'outils intelligents pour l'analyse et l'extraction de données web.
@@ -44,6 +45,7 @@ const Index = () => {
               <ApiKeyManager onApiKeySet={handleApiKeySet} hasValidKey={hasValidApiKey} />
               {hasValidApiKey && <SearchForm onSearch={search} isLoading={isLoading} />}
               <ResultsDisplay results={results} />
+              <ScraperLogsDisplay logs={logs} />
             </div>
           </TabsContent>
           <TabsContent value="index-checker">
@@ -56,7 +58,10 @@ const Index = () => {
       <footer className="border-t border-border/50 py-8 mt-20">
         <div className="container mx-auto px-4 text-center">
           <p className="text-muted-foreground">
-            La boite à outil - Outil de scraping intelligent pour l'analyse web
+            La boite à outils - Outils de scraping intelligents pour l'analyse web
+          </p>
+          <p className="text-muted-foreground text-sm mt-2">
+            Développé avec ❤️ par <a href="https://x.com/MisteurBobu" target="_blank" rel="noopener noreferrer" className="hover:underline">@MisteurBobu</a>
           </p>
         </div>
       </footer>

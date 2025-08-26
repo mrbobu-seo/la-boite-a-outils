@@ -16,11 +16,11 @@ export class ScraperService {
   }
 
   // Effectuer une recherche Google via ScraperAPI
-  static async searchGoogle(params: SearchParams): Promise<string> {
+  static async searchGoogle(params: SearchParams, progressCallback: (message: string) => void): Promise<string> {
     const googleUrl = `https://www.google.${params.tld}/search?q=${encodeURIComponent(params.query)}&hl=${params.language}&gl=${params.countryCode}`;
     const scraperUrl = `${this.API_BASE_URL}?url=${encodeURIComponent(googleUrl)}&render=false`;
 
-    console.log('Scraping Google SERP:', googleUrl);
+    progressCallback(`Scraping Google SERP: ${googleUrl}`);
 
     const response = await fetch(scraperUrl, {
       method: 'GET',
@@ -38,9 +38,9 @@ export class ScraperService {
   }
 
   // Scraper une page web individuelle
-  static async scrapePage(url: string): Promise<ScrapedPageInfo | null> {
+  static async scrapePage(url: string, progressCallback: (message: string) => void): Promise<ScrapedPageInfo | null> {
     try {
-      console.log('Scraping page:', url);
+      progressCallback(`Scraping page: ${url}`);
       const scraperUrl = `${this.API_BASE_URL}?url=${encodeURIComponent(url)}&render=false`;
 
       const response = await fetch(scraperUrl, {
@@ -129,28 +129,28 @@ export class ScraperService {
   }
 
   // Effectuer une recherche complète avec scraping des pages
-  static async searchAndScrape(params: SearchParams): Promise<ScrapingResults> {
+  static async searchAndScrape(params: SearchParams, progressCallback: (message: string) => void): Promise<ScrapingResults> {
 
-    console.log('Démarrage du scraping pour:', params.query);
+    progressCallback(`Démarrage du scraping pour: ${params.query}`);
 
     // 1. Scraper la SERP Google
-    const googleHtml = await this.searchGoogle(params);
+    const googleHtml = await this.searchGoogle(params, progressCallback);
     const searchResults = this.parseGoogleResults(googleHtml);
 
     if (searchResults.length === 0) {
       throw new Error('Aucun résultat trouvé dans la SERP');
     }
 
-    console.log(`${searchResults.length} résultats trouvés dans la SERP`);
+    progressCallback(`${searchResults.length} résultats trouvés dans la SERP`);
 
     // 2. Scraper chaque page individuellement
     const results: SearchResult[] = [];
     
     for (const [index, result] of searchResults.entries()) {
-      console.log(`Scraping ${index + 1}/${searchResults.length}: ${result.url}`);
+      progressCallback(`Scraping ${index + 1}/${searchResults.length}: ${result.url}`);
       
       try {
-        const pageInfo = await this.scrapePage(result.url);
+        const pageInfo = await this.scrapePage(result.url, progressCallback);
         
         results.push({
           url: result.url,
@@ -165,7 +165,7 @@ export class ScraperService {
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       } catch (error) {
-        console.error(`Erreur scraping ${result.url}:`, error);
+        progressCallback(`Erreur scraping ${result.url}: ${error}`);
         results.push({
           url: result.url,
           title: result.title,
