@@ -12,7 +12,7 @@ import ScraperLogsDisplay from '@/components/ScraperLogsDisplay';
 
 const Index = () => {
   const [hasValidApiKey, setHasValidApiKey] = useState(false);
-  const { results, isLoading, search } = useScraper({ hasValidApiKey });
+  const { results, isLoading, search, logs } = useScraper({ hasValidApiKey });
 
   useEffect(() => {
     setHasValidApiKey(ScraperService.hasValidApiKey());
