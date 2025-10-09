@@ -36,24 +36,55 @@ export const SpeedyIndexApiKeyManager = ({ onApiKeySet, hasValidKey }: SpeedyInd
         },
       });
       
+      const rawBody = await response.text();
+      const tryParseJson = (text: string): unknown => {
+        if (!text) return null;
+        try {
+          return JSON.parse(text);
+        } catch {
+          return null;
+        }
+      };
+      const hasErrorMessage = (value: unknown): value is { error: string } => {
+        return (
+          !!value &&
+          typeof value === 'object' &&
+          'error' in value &&
+          typeof (value as { error: unknown }).error === 'string'
+        );
+      };
+
       if (response.ok) {
-        const data = await response.json();
-        if (data.code === 0 && data.balance) {
+        const data = tryParseJson(rawBody);
+        if (!data || typeof data !== 'object') {
+          throw new Error('Réponse inattendue du proxy SpeedyIndex.');
+        }
+        const { code, balance, error: apiError } = data as {
+          code?: number;
+          balance?: { indexer: number; checker: number };
+          error?: string;
+        };
+        if (code === 0 && balance) {
           localStorage.setItem('speedyindex_key', keyToTest);
           onApiKeySet(keyToTest);
           setShowKeyInput(false);
           toast({
             title: "Clé API SpeedyIndex validée",
-            description: `Balance: Indexer: ${data.balance.indexer}, Checker: ${data.balance.checker}`,
+            description: `Balance: Indexer: ${balance.indexer}, Checker: ${balance.checker}`,
           });
           return true;
-        } else {
-          throw new Error(data.error || 'Invalid response from SpeedyIndex API.');
         }
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP ${response.status}`);
+
+        if (typeof apiError === 'string' && apiError.trim().length > 0) {
+          throw new Error(apiError);
+        }
+        throw new Error('Réponse inattendue du proxy SpeedyIndex.');
       }
+
+      const errorData = tryParseJson(rawBody);
+      const errorMessage =
+        (hasErrorMessage(errorData) ? errorData.error : rawBody) || `HTTP ${response.status}`;
+      throw new Error(errorMessage);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue lors de la validation.';
       toast({
