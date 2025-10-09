@@ -37,6 +37,15 @@ interface SpeedyIndexFullReport {
 export class SpeedyIndexService {
   private static readonly API_PROXY_BASE_URL = '/api/speedyindex-proxy';
 
+  private static getApiKey(): string | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    const storedKey = localStorage.getItem('speedyindex_key');
+    return storedKey && storedKey.trim().length > 0 ? storedKey.trim() : null;
+  }
+
   /**
    * Makes a request to the SpeedyIndex proxy.
    * @param endpoint The SpeedyIndex API endpoint (e.g., /v2/account).
@@ -44,25 +53,45 @@ export class SpeedyIndexService {
    * @param body Request body for POST requests.
    * @returns The JSON response from the API.
    */
-  private static async makeRequest<T>(endpoint: string, method: 'GET' | 'POST', body?: any): Promise<T> {
+  private static async makeRequest<T>(endpoint: string, method: 'GET' | 'POST', body?: Record<string, unknown>): Promise<T> {
     const url = `${this.API_PROXY_BASE_URL}${endpoint}`;
+    const apiKey = this.getApiKey();
+
+    if (!apiKey) {
+      throw new Error('La clé API SpeedyIndex n\'est pas configurée.');
+    }
+
     const options: RequestInit = {
       method: method,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'Authorization': apiKey,
       },
       body: body ? JSON.stringify(body) : undefined,
     };
 
     const response = await fetch(url, options);
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `SpeedyIndex API Error: ${response.status} ${response.statusText}`);
+    const responseText = await response.text();
+    let parsedBody: unknown = null;
+
+    if (responseText) {
+      try {
+        parsedBody = JSON.parse(responseText);
+      } catch {
+        parsedBody = responseText;
+      }
     }
 
-    return response.json();
+    if (!response.ok) {
+      const errorMessage = typeof parsedBody === 'string'
+        ? parsedBody
+        : (parsedBody as { error?: string })?.error || `SpeedyIndex API Error: ${response.status} ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
+
+    return parsedBody as T;
   }
 
   /**
