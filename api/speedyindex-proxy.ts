@@ -10,11 +10,19 @@ module.exports = async function (request, response) {
     return response.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // Get SpeedyIndex API Key from environment variables
-  const SPEEDYINDEX_API_KEY = process.env.SPEEDYINDEX_API_KEY;
+  // Get SpeedyIndex API Key from request header or environment variables
+  const headerApiKey = (() => {
+    const incomingKey = request.headers['authorization'] || request.headers['x-speedyindex-api-key'];
+    if (Array.isArray(incomingKey)) {
+      return incomingKey.find((value) => !!value?.trim()) || null;
+    }
+    return typeof incomingKey === 'string' && incomingKey.trim().length > 0 ? incomingKey.trim() : null;
+  })();
+
+  const SPEEDYINDEX_API_KEY = headerApiKey || process.env.SPEEDYINDEX_API_KEY;
   if (!SPEEDYINDEX_API_KEY) {
-    console.error('SPEEDYINDEX_API_KEY is not configured in environment variables.');
-    return response.status(500).json({ error: 'Server configuration error: API key missing.' });
+    console.error('SPEEDYINDEX_API_KEY is not configured in environment variables or request headers.');
+    return response.status(401).json({ error: 'API key manquante pour SpeedyIndex.' });
   }
 
   // Extract the target path from the request URL (e.g., /v2/account, /v2/task/google/indexer/create)
@@ -38,10 +46,26 @@ module.exports = async function (request, response) {
 
   try {
     // Forward the request to SpeedyIndex API
+    const bodyToForward = (() => {
+      if (request.method !== 'POST') {
+        return undefined;
+      }
+
+      if (typeof request.body === 'string') {
+        return request.body;
+      }
+
+      if (request.body && Object.keys(request.body).length > 0) {
+        return JSON.stringify(request.body);
+      }
+
+      return undefined;
+    })();
+
     const speedyIndexApiResponse = await fetch(speedyIndexApiUrl, {
       method: request.method,
       headers: headers,
-      body: request.method === 'POST' ? JSON.stringify(request.body) : undefined, // Forward body for POST requests
+      body: bodyToForward,
     });
 
     // Check if the response from SpeedyIndex is OK

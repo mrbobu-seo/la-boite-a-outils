@@ -37,6 +37,15 @@ interface SpeedyIndexFullReport {
 export class SpeedyIndexService {
   private static readonly API_PROXY_BASE_URL = '/api/speedyindex-proxy';
 
+  private static getApiKey(): string | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    const storedKey = localStorage.getItem('speedyindex_key');
+    return storedKey && storedKey.trim().length > 0 ? storedKey.trim() : null;
+  }
+
   /**
    * Makes a request to the SpeedyIndex proxy.
    * @param endpoint The SpeedyIndex API endpoint (e.g., /v2/account).
@@ -44,13 +53,20 @@ export class SpeedyIndexService {
    * @param body Request body for POST requests.
    * @returns The JSON response from the API.
    */
-  private static async makeRequest<T>(endpoint: string, method: 'GET' | 'POST', body?: any): Promise<T> {
+  private static async makeRequest<T>(endpoint: string, method: 'GET' | 'POST', body?: Record<string, unknown>): Promise<T> {
     const url = `${this.API_PROXY_BASE_URL}${endpoint}`;
+    const apiKey = this.getApiKey();
+
+    if (!apiKey) {
+      throw new Error('La clé API SpeedyIndex n\'est pas configurée.');
+    }
+
     const options: RequestInit = {
       method: method,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'Authorization': apiKey,
       },
       body: body ? JSON.stringify(body) : undefined,
     };
