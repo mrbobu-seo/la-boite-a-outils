@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Session } from '@supabase/supabase-js';
 import { Link } from 'react-router-dom';
+import { LogIn, Settings, LogOut } from 'lucide-react';
 
 const UserSession = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -26,17 +27,19 @@ const UserSession = () => {
     <div className="absolute top-4 right-4">
       {session ? (
         <div className="flex items-center gap-4">
-          <p className="text-sm">{session.user.email}</p>
-<Link to="/settings" className="bg-gray-500 text-white px-3 py-1 rounded-md">
-            Paramètres
-          </Link>
-          <button onClick={handleLogout} className="bg-red-500 text-white px-3 py-1 rounded-md">
-            Déconnexion
-          </button>
-        </div>
-      ) : (
-        <Link to="/auth" className="bg-blue-500 text-white px-3 py-1 rounded-md">
-          Connexion
+                  <p className="text-sm text-white bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-2 rounded-full">{session.user.email}</p>
+                  <Link to="/settings" className="flex items-center gap-2 px-4 py-2 rounded-full text-white bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors">
+                    <Settings className="h-4 w-4" />
+                    <span>Paramètres</span>
+                  </Link>
+                  <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 rounded-full text-white bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors">
+                    <LogOut className="h-4 w-4" />
+                    <span>Déconnexion</span>
+                  </button>
+                </div>      ) : (
+        <Link to="/auth" className="flex items-center gap-2 px-4 py-2 rounded-full text-white bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors">
+          <LogIn className="h-4 w-4" />
+          <span>Connexion</span>
         </Link>
       )}
     </div>
