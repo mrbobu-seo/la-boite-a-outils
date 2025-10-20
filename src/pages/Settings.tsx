@@ -39,10 +39,13 @@ const Settings = () => {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { error } = await supabase.from('api_keys').upsert([
-        { user_id: user.id, service_name: 'ScraperAPI', api_key: scraperApiKey },
-        { user_id: user.id, service_name: 'SpeedyIndex', api_key: speedyIndexApiKey },
-      ]);
+      const { error } = await supabase.from('api_keys').upsert(
+        [
+          { user_id: user.id, service_name: 'ScraperAPI', api_key: scraperApiKey },
+          { user_id: user.id, service_name: 'SpeedyIndex', api_key: speedyIndexApiKey },
+        ],
+        { onConflict: 'user_id, service_name' }
+      );
 
       if (error) {
         alert(error.message);
