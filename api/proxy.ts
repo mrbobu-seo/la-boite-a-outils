@@ -1,12 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
 export default async function (request, response) {
+  console.log('Proxy function started.');
+
   const { query } = request;
   const { url, ...rest } = query;
+
+  console.log('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
+  console.log('SUPABASE_SERVICE_ROLE_KEY exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   const authHeader = request.headers.authorization;
+  console.log('Authorization header:', authHeader);
   if (!authHeader) {
     return response.status(401).json({ error: 'Authorization header missing' });
   }
@@ -14,9 +20,15 @@ export default async function (request, response) {
   const token = authHeader.split(' ')[1];
   const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
-  if (userError || !user) {
+  if (userError) {
+    console.error('getUser error:', userError);
     return response.status(401).json({ error: 'Invalid token' });
   }
+  if (!user) {
+    console.error('No user found for token.');
+    return response.status(401).json({ error: 'Invalid token' });
+  }
+  console.log('User found:', user.id);
 
   const { data: apiKeyData, error: apiKeyError } = await supabase
     .from('api_keys')
@@ -25,9 +37,15 @@ export default async function (request, response) {
     .eq('service_name', 'ScraperAPI')
     .single();
 
-  if (apiKeyError || !apiKeyData) {
+  if (apiKeyError) {
+    console.error('apiKeyError:', apiKeyError);
     return response.status(404).json({ error: 'ScraperAPI key not found for this user.' });
   }
+  if (!apiKeyData) {
+    console.error('No API key data found.');
+    return response.status(404).json({ error: 'ScraperAPI key not found for this user.' });
+  }
+  console.log('API key data found.');
 
   const scraperApiKey = apiKeyData.api_key;
 
@@ -40,6 +58,7 @@ export default async function (request, response) {
   }
 
   try {
+    console.log('Fetching from ScraperAPI...');
     const scraperApiResponse = await fetch(scraperApiUrl.toString(), {
       method: request.method,
       headers: {
@@ -50,12 +69,14 @@ export default async function (request, response) {
 
     if (!scraperApiResponse.ok) {
       const errorText = await scraperApiResponse.text();
+      console.error('ScraperAPI error:', errorText);
       return response.status(scraperApiResponse.status).json({
         error: `ScraperAPI error: ${scraperApiResponse.status} ${scraperApiResponse.statusText}`,
         details: errorText,
       });
     }
 
+    console.log('ScraperAPI request successful.');
     scraperApiResponse.headers.forEach((value, name) => {
       if (name.toLowerCase() !== 'content-encoding') {
         response.setHeader(name, value);
