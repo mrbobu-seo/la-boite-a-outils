@@ -1,6 +1,6 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
-module.exports = async function (request, response) {
+export default async function (request, response) {
   const allowedMethods = ['GET', 'POST'];
   if (!allowedMethods.includes(request.method)) {
     return response.status(405).json({ error: 'Method Not Allowed' });

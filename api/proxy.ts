@@ -1,6 +1,6 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
-module.exports = async function (request, response) {
+export default async function (request, response) {
   const { query } = request;
   const { url, ...rest } = query;
 
