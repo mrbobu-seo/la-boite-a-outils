@@ -60,9 +60,7 @@ const Settings = () => {
           <label className="block mb-2">ScraperAPI Key</label>
           <input
             type="text"
-            value={scraperApiKey}
-            onChange={(e) => setScraperApiKey(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md text-black"
           />
         </div>
         <div className="mb-4">

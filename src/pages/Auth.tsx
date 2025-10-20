@@ -35,8 +35,7 @@ const Auth = () => {
             type="email"
             placeholder="Your email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md text-black"
           />
         </div>
         <div className="mb-4">
