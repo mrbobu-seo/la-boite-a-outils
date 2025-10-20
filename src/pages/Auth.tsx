@@ -27,10 +27,28 @@ const Auth = () => {
     if (error) {
       alert(error.message);
     } else {
-      alert('Check your email for the confirmation link!');
-      navigate('/');
-    }
     setLoading(false);
+  };
+
+  const handlePasswordReset = async () => {
+    const email = prompt('Please enter your email address:');
+    if (email) {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
+      });
+      if (error) {
+        alert(error.message);
+      } else {
+        alert('Check your email for the password reset link!');
+      }
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+    if (error) {
+      alert(error.message);
+    }
   };
 
   return (
@@ -52,7 +70,7 @@ const Auth = () => {
             placeholder="Your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md text-black"
           />
         </div>
         <div className="flex justify-center gap-4">
@@ -61,6 +79,16 @@ const Auth = () => {
           </button>
           <button onClick={handleSignup} disabled={loading} className="bg-green-500 text-white px-4 py-2 rounded-md">
             {loading ? 'Loading...' : 'Signup'}
+          </button>
+        </div>
+        <div className="mt-4">
+          <a href="#" onClick={handlePasswordReset} className="text-sm text-blue-500 hover:underline">
+            Forgot Password?
+          </a>
+        </div>
+        <div className="mt-4">
+          <button onClick={handleGoogleLogin} className="bg-red-500 text-white px-4 py-2 rounded-md w-full">
+            Login with Google
           </button>
         </div>
       </form>

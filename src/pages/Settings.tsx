@@ -71,7 +71,7 @@ const Settings = () => {
             type="text"
             value={speedyIndexApiKey}
             onChange={(e) => setSpeedyIndexApiKey(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md text-black"
           />
         </div>
         <button type="submit" disabled={loading} className="bg-blue-500 text-white px-4 py-2 rounded-md">
