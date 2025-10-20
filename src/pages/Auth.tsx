@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 
 const Auth = () => {
@@ -74,6 +74,11 @@ const Auth = () => {
           <button type="button" onClick={handleGoogleLogin} className="bg-red-500 text-white px-4 py-2 rounded-md w-full">
             Login with Google
           </button>
+        </div>
+        <div className="mt-4">
+          <Link to="/forgot-password" className="text-sm text-blue-500 hover:underline">
+            Forgot Password?
+          </Link>
         </div>
       </form>
     </div>
