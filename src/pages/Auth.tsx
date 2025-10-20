@@ -63,15 +63,15 @@ const Auth = () => {
           />
         </div>
         <div className="flex justify-center gap-4">
-          <button onClick={handleLogin} disabled={loading} className="bg-blue-500 text-white px-4 py-2 rounded-md">
+          <button type="button" onClick={handleLogin} disabled={loading} className="bg-blue-500 text-white px-4 py-2 rounded-md">
             {loading ? 'Loading...' : 'Login'}
           </button>
-          <button onClick={handleSignup} disabled={loading} className="bg-green-500 text-white px-4 py-2 rounded-md">
+          <button type="button" onClick={handleSignup} disabled={loading} className="bg-green-500 text-white px-4 py-2 rounded-md">
             {loading ? 'Loading...' : 'Signup'}
           </button>
         </div>
         <div className="mt-4">
-          <button onClick={handleGoogleLogin} className="bg-red-500 text-white px-4 py-2 rounded-md w-full">
+          <button type="button" onClick={handleGoogleLogin} className="bg-red-500 text-white px-4 py-2 rounded-md w-full">
             Login with Google
           </button>
         </div>
