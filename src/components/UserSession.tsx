@@ -4,6 +4,7 @@ import { Session } from '@supabase/supabase-js';
 import { Link } from 'react-router-dom';
 import { LogIn, Settings, LogOut } from 'lucide-react';
 
+// Redesigned user session buttons
 const UserSession = () => {
   const [session, setSession] = useState<Session | null>(null);
 
