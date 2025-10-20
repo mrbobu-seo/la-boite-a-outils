@@ -1,21 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
 export default async function (request, response) {
-  console.log('Proxy function started.');
-
-  let supabase;
-  try {
-    console.log('SUPABASE_URL value:', process.env.SUPABASE_URL);
-    console.log('SUPABASE_SERVICE_ROLE_KEY exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-    supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-    console.log('Supabase client created successfully.');
-  } catch (error) {
-    console.error('Error creating Supabase client:', error);
-    return response.status(500).json({ error: 'Internal Server Error: Could not create Supabase client.' });
-  }
-
   const { query } = request;
   const { url, ...rest } = query;
+
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   const authHeader = request.headers.authorization;
   if (!authHeader) {
@@ -26,7 +15,6 @@ export default async function (request, response) {
   const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
   if (userError || !user) {
-    console.error('getUser error:', userError);
     return response.status(401).json({ error: 'Invalid token' });
   }
 
@@ -38,7 +26,6 @@ export default async function (request, response) {
     .single();
 
   if (apiKeyError || !apiKeyData) {
-    console.error('apiKeyError:', apiKeyError);
     return response.status(404).json({ error: 'ScraperAPI key not found for this user.' });
   }
 
