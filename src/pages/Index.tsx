@@ -63,7 +63,7 @@ const Index = () => {
           </Tabs>
         ) : (
           <div className="text-center">
-            <p className="text-lg">Please log in to use the tools.</p>
+            <p className="text-lg">Veuillez vous connecter pour utiliser les outils.</p>
           </div>
         )}
       </main>

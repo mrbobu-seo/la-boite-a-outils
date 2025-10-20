@@ -27,16 +27,16 @@ const UserSession = () => {
       {session ? (
         <div className="flex items-center gap-4">
           <p className="text-sm">{session.user.email}</p>
-          <Link to="/settings" className="bg-gray-500 text-white px-3 py-1 rounded-md">
-            Settings
+<Link to="/settings" className="bg-gray-500 text-white px-3 py-1 rounded-md">
+            Paramètres
           </Link>
           <button onClick={handleLogout} className="bg-red-500 text-white px-3 py-1 rounded-md">
-            Logout
+            Déconnexion
           </button>
         </div>
       ) : (
         <Link to="/auth" className="bg-blue-500 text-white px-3 py-1 rounded-md">
-          Login
+          Connexion
         </Link>
       )}
     </div>
