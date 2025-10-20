@@ -30,6 +30,7 @@ const Auth = () => {
     setLoading(false);
   };
 
+  /*
   const handlePasswordReset = async () => {
     const email = prompt('Please enter your email address:');
     if (email) {
@@ -43,6 +44,7 @@ const Auth = () => {
       }
     }
   };
+  */
 
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
@@ -81,11 +83,11 @@ const Auth = () => {
             {loading ? 'Loading...' : 'Signup'}
           </button>
         </div>
-        <div className="mt-4">
+        {/* <div className="mt-4">
           <a href="#" onClick={handlePasswordReset} className="text-sm text-blue-500 hover:underline">
             Forgot Password?
           </a>
-        </div>
+        </div> */}
         <div className="mt-4">
           <button onClick={handleGoogleLogin} className="bg-red-500 text-white px-4 py-2 rounded-md w-full">
             Login with Google
