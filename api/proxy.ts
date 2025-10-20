@@ -30,6 +30,7 @@ export default async function (request, response) {
   }
 
   const scraperApiKey = apiKeyData.api_key;
+  console.log('Using ScraperAPI key:', scraperApiKey);
 
   const scraperApiUrl = new URL('https://api.scraperapi.com/');
   scraperApiUrl.searchParams.append('api_key', scraperApiKey);
