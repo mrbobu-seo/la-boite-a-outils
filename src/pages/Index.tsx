@@ -9,21 +9,30 @@ import heroImage from '@/assets/hero-scraper.jpg';
 import { Bot, Zap, Globe, Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ScraperLogsDisplay from '@/components/ScraperLogsDisplay';
+import UserSession from '@/components/UserSession';
+
+import { Session } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 
 const Index = () => {
-  const [hasValidApiKey, setHasValidApiKey] = useState(false);
-  const { results, isLoading, search, logs } = useScraper({ hasValidApiKey });
+  const [session, setSession] = useState<Session | null>(null);
+  const { results, isLoading, search, logs } = useScraper({ hasValidApiKey: !!session });
 
   useEffect(() => {
-    setHasValidApiKey(ScraperService.hasValidApiKey());
-  }, []);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
 
-  const handleApiKeySet = (apiKey: string) => {
-    setHasValidApiKey(!!apiKey);
-  };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
+      <UserSession />
       <div className="container mx-auto px-4 py-12 text-center">
         <h1 className="text-5xl font-bold mb-4 gradient-text">
           La boite à outils
@@ -35,23 +44,28 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-12">
-        <Tabs defaultValue="scraper" className="w-full max-w-6xl mx-auto">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="scraper">Scraper SEO</TabsTrigger>
-            <TabsTrigger value="index-checker">Index Checker & Indexation</TabsTrigger>
-          </TabsList>
-          <TabsContent value="scraper">
-            <div className="space-y-12">
-              <ApiKeyManager onApiKeySet={handleApiKeySet} hasValidKey={hasValidApiKey} />
-              {hasValidApiKey && <SearchForm onSearch={search} isLoading={isLoading} />}
-              <ResultsDisplay results={results} />
-              <ScraperLogsDisplay logs={logs} />
-            </div>
-          </TabsContent>
-          <TabsContent value="index-checker">
-            <IndexCheckerTool />
-          </TabsContent>
-        </Tabs>
+        {session ? (
+          <Tabs defaultValue="scraper" className="w-full max-w-6xl mx-auto">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="scraper">Scraper SEO</TabsTrigger>
+              <TabsTrigger value="index-checker">Index Checker & Indexation</TabsTrigger>
+            </TabsList>
+            <TabsContent value="scraper">
+              <div className="space-y-12">
+                <SearchForm onSearch={search} isLoading={isLoading} />
+                <ResultsDisplay results={results} />
+                <ScraperLogsDisplay logs={logs} />
+              </div>
+            </TabsContent>
+            <TabsContent value="index-checker">
+              <IndexCheckerTool />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <div className="text-center">
+            <p className="text-lg">Please log in to use the tools.</p>
+          </div>
+        )}
       </main>
 
       {/* Footer */}

@@ -1,26 +1,40 @@
+const { createClient } = require('@supabase/supabase-js');
+
 module.exports = async function (request, response) {
   const { query } = request;
-  const { api_key, url, ...rest } = query;
+  const { url, ...rest } = query;
 
-  // Security: Check for API key presence in environment variables
-  const SCRAPERAPI_KEY = process.env.SCRAPERAPI_KEY;
-  if (!SCRAPERAPI_KEY) {
-    return response.status(500).json({ error: 'Server API key not configured.' });
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  const authHeader = request.headers.authorization;
+  if (!authHeader) {
+    return response.status(401).json({ error: 'Authorization header missing' });
   }
 
-  // Security: Basic origin check (optional but recommended)
-  // In a real application, you might want to restrict this to your frontend domain
-  // const origin = request.headers.origin;
-  // if (origin && !origin.includes('your-github-pages-domain.com')) {
-  //   return response.status(403).json({ error: 'Forbidden origin.' });
-  // }
+  const token = authHeader.split(' ')[1];
+  const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
-  // Construct ScraperAPI URL
+  if (userError || !user) {
+    return response.status(401).json({ error: 'Invalid token' });
+  }
+
+  const { data: apiKeyData, error: apiKeyError } = await supabase
+    .from('api_keys')
+    .select('api_key')
+    .eq('user_id', user.id)
+    .eq('service_name', 'ScraperAPI')
+    .single();
+
+  if (apiKeyError || !apiKeyData) {
+    return response.status(404).json({ error: 'ScraperAPI key not found for this user.' });
+  }
+
+  const scraperApiKey = apiKeyData.api_key;
+
   const scraperApiUrl = new URL('https://api.scraperapi.com/');
-  scraperApiUrl.searchParams.append('api_key', SCRAPERAPI_KEY);
+  scraperApiUrl.searchParams.append('api_key', scraperApiKey);
   scraperApiUrl.searchParams.append('url', url);
 
-  // Add other query parameters
   for (const key in rest) {
     scraperApiUrl.searchParams.append(key, rest[key]);
   }
@@ -31,7 +45,6 @@ module.exports = async function (request, response) {
       headers: {
         'User-Agent': request.headers['user-agent'] || '',
         'Accept': request.headers['accept'] || '',
-        // Add other headers as needed, but be careful not to expose sensitive info
       },
     });
 
@@ -43,7 +56,6 @@ module.exports = async function (request, response) {
       });
     }
 
-    // Forward headers from ScraperAPI response, excluding Content-Encoding
     scraperApiResponse.headers.forEach((value, name) => {
       if (name.toLowerCase() !== 'content-encoding') {
         response.setHeader(name, value);
@@ -57,4 +69,4 @@ module.exports = async function (request, response) {
     console.error('Proxy error:', error);
     return response.status(500).json({ error: 'Internal proxy error.' });
   }
-}
+};
