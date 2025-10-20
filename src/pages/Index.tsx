@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SearchForm } from '@/components/SearchForm';
 import { ResultsDisplay } from '@/components/ResultsDisplay';
+import IndexCheckerTool from '@/components/IndexCheckerTool';
 import { useScraper } from '@/hooks/useScraper';
 import heroImage from '@/assets/hero-scraper.jpg';
 import { Bot, Zap, Globe, Download } from 'lucide-react';
