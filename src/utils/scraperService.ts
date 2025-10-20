@@ -4,19 +4,8 @@ import { SearchParams, ScrapingResults, SearchResult, ScrapedPageInfo } from '@/
 export class ScraperService {
   private static readonly API_BASE_URL = '/api/proxy';
 
-  // Obtenir la clé API depuis localStorage
-  static getApiKey(): string | null {
-    return localStorage.getItem('scraperapi_key');
-  }
-
-  // Valider si une clé API est configurée
-  static hasValidApiKey(): boolean {
-    const apiKey = this.getApiKey();
-    return apiKey !== null && apiKey.trim().length > 0;
-  }
-
   // Effectuer une recherche Google via ScraperAPI
-  static async searchGoogle(params: SearchParams, progressCallback: (message: string) => void): Promise<string> {
+  static async searchGoogle(params: SearchParams, accessToken: string, progressCallback: (message: string) => void): Promise<string> {
     const googleUrl = `https://www.google.${params.tld}/search?q=${encodeURIComponent(params.query)}&hl=${params.language}&gl=${params.countryCode}`;
     const scraperUrl = `${this.API_BASE_URL}?url=${encodeURIComponent(googleUrl)}&render=false`;
 
@@ -26,19 +15,20 @@ export class ScraperService {
       method: 'GET',
       headers: {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'X-Requested-With': 'XMLHttpRequest'
+        'X-Requested-With': 'XMLHttpRequest',
+        'Authorization': `Bearer ${accessToken}`,
       }
     });
 
     if (!response.ok) {
-      throw new Error(`Erreur API ScraperAPI: ${response.status} ${response.statusText}`);
+      throw new Error(`Erreur API ScraperAPI: ${response.status}`);
     }
 
     return await response.text();
   }
 
   // Scraper une page web individuelle
-  static async scrapePage(url: string, progressCallback: (message: string) => void): Promise<ScrapedPageInfo | null> {
+  static async scrapePage(url: string, accessToken: string, progressCallback: (message: string) => void): Promise<ScrapedPageInfo | null> {
     try {
       progressCallback(`Scraping page: ${url}`);
       const scraperUrl = `${this.API_BASE_URL}?url=${encodeURIComponent(url)}&render=false`;
@@ -47,7 +37,8 @@ export class ScraperService {
         method: 'GET',
         headers: {
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'X-Requested-With': 'XMLHttpRequest'
+          'X-Requested-With': 'XMLHttpRequest',
+          'Authorization': `Bearer ${accessToken}`,
         }
       });
 
@@ -129,12 +120,12 @@ export class ScraperService {
   }
 
   // Effectuer une recherche complète avec scraping des pages
-  static async searchAndScrape(params: SearchParams, progressCallback: (message: string) => void): Promise<ScrapingResults> {
+  static async searchAndScrape(params: SearchParams, accessToken: string, progressCallback: (message: string) => void): Promise<ScrapingResults> {
 
     progressCallback(`Démarrage du scraping pour: ${params.query}`);
 
     // 1. Scraper la SERP Google
-    const googleHtml = await this.searchGoogle(params, progressCallback);
+    const googleHtml = await this.searchGoogle(params, accessToken, progressCallback);
     const searchResults = this.parseGoogleResults(googleHtml);
 
     if (searchResults.length === 0) {
@@ -150,7 +141,7 @@ export class ScraperService {
       progressCallback(`Scraping ${index + 1}/${searchResults.length}: ${result.url}`);
       
       try {
-        const pageInfo = await this.scrapePage(result.url, progressCallback);
+        const pageInfo = await this.scrapePage(result.url, accessToken, progressCallback);
         
         results.push({
           url: result.url,

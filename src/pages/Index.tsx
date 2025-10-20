@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { SearchForm } from '@/components/SearchForm';
 import { ResultsDisplay } from '@/components/ResultsDisplay';
-import { ApiKeyManager } from '@/components/ApiKeyManager';
-import IndexCheckerTool from '@/components/IndexCheckerTool';
-import { ScraperService } from '@/utils/scraperService';
 import { useScraper } from '@/hooks/useScraper';
 import heroImage from '@/assets/hero-scraper.jpg';
 import { Bot, Zap, Globe, Download } from 'lucide-react';
@@ -16,7 +13,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 const Index = () => {
   const [session, setSession] = useState<Session | null>(null);
-  const { results, isLoading, search, logs } = useScraper({ hasValidApiKey: !!session });
+  const { results, isLoading, search, logs } = useScraper();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

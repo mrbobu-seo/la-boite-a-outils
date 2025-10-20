@@ -2,12 +2,9 @@ import { useState } from 'react';
 import { SearchParams, ScrapingResults } from '@/types/scraper';
 import { ScraperService } from '@/utils/scraperService';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabaseClient';
 
-interface UseScraperProps {
-  hasValidApiKey: boolean;
-}
-
-export const useScraper = ({ hasValidApiKey }: UseScraperProps) => {
+export const useScraper = () => {
   const { toast } = useToast();
   const [results, setResults] = useState<ScrapingResults | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,11 +16,13 @@ export const useScraper = ({ hasValidApiKey }: UseScraperProps) => {
 
   const search = async (params: SearchParams) => {
     setLogs([]); // Clear logs at the start of a new search
-    if (!hasValidApiKey) {
-      addLog('Clé API requise: Veuillez configurer votre clé ScraperAPI.');
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      addLog('Utilisateur non connecté. Veuillez vous connecter.');
       toast({
-        title: 'Clé API requise',
-        description: 'Veuillez configurer votre clé ScraperAPI',
+        title: 'Non connecté',
+        description: 'Veuillez vous connecter pour utiliser le scraper.',
         variant: 'destructive',
       });
       return;
@@ -51,7 +50,7 @@ export const useScraper = ({ hasValidApiKey }: UseScraperProps) => {
         description: `Recherche en cours pour: "${params.query}"`,
       });
 
-      const scrapingResults = await ScraperService.searchAndScrape(params, addLog); // Pass addLog as callback
+      const scrapingResults = await ScraperService.searchAndScrape(params, session.access_token, addLog);
       setResults(scrapingResults);
 
       addLog(`Scraping terminé: ${scrapingResults.organic_results.length} résultats trouvés.`);
