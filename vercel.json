@@ -1,11 +1,7 @@
 {
   "functions": {
-    "api/proxy.ts": {
-      "memory": 1024
-    },
-    "api/speedyindex-proxy.ts": {
-      "memory": 1024
-    }
+    "api/proxy.ts": {},
+    "api/speedyindex-proxy.ts": {}
   },
   "rewrites": [
     {
