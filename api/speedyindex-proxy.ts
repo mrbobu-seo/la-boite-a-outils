@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 export default async function (request, response) {
+  response.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+
   const allowedMethods = ['GET', 'POST'];
   if (!allowedMethods.includes(request.method)) {
     return response.status(405).json({ error: 'Method Not Allowed' });
