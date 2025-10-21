@@ -122,14 +122,14 @@ export const SearchForm = ({ onSearch, isLoading, projects }: SearchFormProps) =
             Projet (Optionnel)
           </Label>
           <Select
-            value={projectId ? String(projectId) : ""}
-            onValueChange={(value) => setProjectId(value ? parseInt(value) : undefined)}
+            value={projectId ? String(projectId) : "no-project"}
+            onValueChange={(value) => setProjectId(value === "no-project" ? undefined : parseInt(value))}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Aucun projet" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Aucun projet</SelectItem>
+              <SelectItem value="no-project">Aucun projet</SelectItem>
               {projects.map(project => (
                 <SelectItem key={project.id} value={String(project.id)}>{project.name}</SelectItem>
               ))}
