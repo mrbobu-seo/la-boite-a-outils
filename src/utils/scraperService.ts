@@ -192,6 +192,8 @@ export class ScraperService {
       ]);
       if (error) {
         progressCallback(`Erreur lors de l'enregistrement des résultats: ${error.message}`);
+      } else {
+        progressCallback('Résultats enregistrés dans le projet avec succès.');
       }
     }
 
