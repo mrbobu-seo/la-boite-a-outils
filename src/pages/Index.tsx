@@ -54,7 +54,7 @@ const Index = () => {
   }, [session]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-12 text-center">
         <h1 className="text-5xl font-bold mb-4 gradient-text">
           La boite à outils

@@ -3,6 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SearchParams } from '@/types/scraper';
 import { Search, Globe, Code, Languages, Folder } from 'lucide-react';
 
@@ -114,17 +121,20 @@ export const SearchForm = ({ onSearch, isLoading, projects }: SearchFormProps) =
             <Folder className="h-4 w-4" />
             Projet (Optionnel)
           </Label>
-          <select
-            id="project"
-            value={projectId || ''}
-            onChange={(e) => setProjectId(e.target.value ? parseInt(e.target.value) : undefined)}
-            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
+          <Select
+            value={projectId ? String(projectId) : ""}
+            onValueChange={(value) => setProjectId(value ? parseInt(value) : undefined)}
           >
-            <option value="">Aucun projet</option>
-            {projects.map(project => (
-              <option key={project.id} value={project.id}>{project.name}</option>
-            ))}
-          </select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Aucun projet" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Aucun projet</SelectItem>
+              {projects.map(project => (
+                <SelectItem key={project.id} value={String(project.id)}>{project.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <Button
