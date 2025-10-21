@@ -51,6 +51,19 @@ const ProjectDetail = () => {
     fetchResults();
   }, [id]);
 
+  
+  const downloadJSON = (data: any, query: string) => {
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+      JSON.stringify(data, null, 2)
+    )}`;
+    const link = document.createElement("a");
+    link.href = jsonString;
+    const safeQuery = query.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    link.download = `scraper_results_${safeQuery}.json`;
+
+    link.click();
+  };
+
   if (!project) {
     return <div>Chargement...</div>;
   }
@@ -65,12 +78,22 @@ const ProjectDetail = () => {
             {results.length > 0 ? (
               results.map(result => (
                 <div key={result.id} className="bg-gray-50 p-4 rounded-lg">
-                  <h2 className="text-xl font-semibold text-gray-900">{result.query}</h2>
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-semibold text-gray-900">{result.query}</h2>
+                    <button
+                      onClick={() => downloadJSON(result.data, result.query)}
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    >
+                      Télécharger
+                    </button>
+                  </div>
                   <p className="text-sm text-gray-500">Date: {new Date(result.created_at).toLocaleString()}</p>
-                  {/* Here you would display the actual scraper results */}
-                  <pre className="mt-4 p-4 bg-gray-200 rounded-md overflow-x-auto">
-                    {JSON.stringify(result.data, null, 2)}
-                  </pre>
+                  <details className="mt-4">
+                    <summary className="cursor-pointer">Voir les résultats</summary>
+                    <pre className="mt-2 p-4 bg-gray-200 rounded-md overflow-x-auto">
+                      {JSON.stringify(result.data, null, 2)}
+                    </pre>
+                  </details>
                 </div>
               ))
             ) : (
