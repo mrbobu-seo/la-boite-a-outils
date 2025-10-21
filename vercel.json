@@ -1,1 +1,24 @@
-{}
+{
+  "functions": {
+    "api/proxy.ts": {
+      "memory": 1024
+    },
+    "api/speedyindex-proxy.ts": {
+      "memory": 1024
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/proxy",
+      "destination": "/api/proxy"
+    },
+    {
+      "source": "/api/speedyindex-proxy/(.*)",
+      "destination": "/api/speedyindex-proxy"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
