@@ -12,8 +12,14 @@ import UserSession from '@/components/UserSession';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabaseClient';
 
+interface Project {
+  id: number;
+  name: string;
+}
+
 const Index = () => {
   const [session, setSession] = useState<Session | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
   const { results, isLoading, search, logs } = useScraper();
 
   useEffect(() => {
@@ -27,6 +33,26 @@ const Index = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      if (session) {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('id, name')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching projects:', error);
+        } else {
+          setProjects(data);
+        }
+      }
+    };
+
+    fetchProjects();
+  }, [session]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,12 +71,12 @@ const Index = () => {
         {session ? (
           <Tabs defaultValue="scraper" className="w-full max-w-6xl mx-auto">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="scraper">Scraper SEO</TabsTrigger>
+              <TabsTrigger value="scraper">Scraper SERP</TabsTrigger>
               <TabsTrigger value="index-checker">Index Checker & Indexation</TabsTrigger>
             </TabsList>
             <TabsContent value="scraper">
               <div className="space-y-12">
-                <SearchForm onSearch={search} isLoading={isLoading} />
+                <SearchForm onSearch={search} isLoading={isLoading} projects={projects} />
                 <ResultsDisplay results={results} />
                 <ScraperLogsDisplay logs={logs} />
               </div>

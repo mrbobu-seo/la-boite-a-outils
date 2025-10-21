@@ -4,24 +4,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { SearchParams } from '@/types/scraper';
-import { Search, Globe, Code, Languages } from 'lucide-react';
+import { Search, Globe, Code, Languages, Folder } from 'lucide-react';
 
-interface SearchFormProps {
-  onSearch: (params: SearchParams) => void;
-  isLoading: boolean;
+interface Project {
+  id: number;
+  name: string;
 }
 
-export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
+interface SearchFormProps {
+  onSearch: (params: SearchParams & { projectId?: number }) => void;
+  isLoading: boolean;
+  projects: Project[];
+}
+
+export const SearchForm = ({ onSearch, isLoading, projects }: SearchFormProps) => {
   const [params, setParams] = useState<SearchParams>({
     query: '',
     countryCode: 'fr',
     tld: 'fr',
     language: 'fr'
   });
+  const [projectId, setProjectId] = useState<number | undefined>(undefined);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(params);
+    onSearch({ ...params, projectId });
   };
 
   const updateParam = (key: keyof SearchParams, value: string) => {
@@ -100,6 +107,24 @@ export const SearchForm = ({ onSearch, isLoading }: SearchFormProps) => {
               required
             />
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="project" className="flex items-center gap-2">
+            <Folder className="h-4 w-4" />
+            Projet (Optionnel)
+          </Label>
+          <select
+            id="project"
+            value={projectId || ''}
+            onChange={(e) => setProjectId(e.target.value ? parseInt(e.target.value) : undefined)}
+            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
+          >
+            <option value="">Aucun projet</option>
+            {projects.map(project => (
+              <option key={project.id} value={project.id}>{project.name}</option>
+            ))}
+          </select>
         </div>
 
         <Button

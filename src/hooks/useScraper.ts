@@ -14,7 +14,7 @@ export const useScraper = () => {
     setLogs((prevLogs) => [...prevLogs, message]);
   };
 
-  const search = async (params: SearchParams) => {
+  const search = async (params: SearchParams & { projectId?: number }) => {
     setLogs([]); // Clear logs at the start of a new search
 
     const { data: { session } } = await supabase.auth.getSession();
@@ -50,7 +50,7 @@ export const useScraper = () => {
         description: `Recherche en cours pour: "${params.query}"`,
       });
 
-      const scrapingResults = await ScraperService.searchAndScrape(params, session.access_token, addLog);
+      const scrapingResults = await ScraperService.searchAndScrape(params, session, addLog);
       setResults(scrapingResults);
 
       addLog(`Scraping terminé: ${scrapingResults.organic_results.length} résultats trouvés.`);

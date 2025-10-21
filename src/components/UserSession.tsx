@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Session } from '@supabase/supabase-js';
 import { Link } from 'react-router-dom';
-import { LogIn, Settings, LogOut } from 'lucide-react';
+import { LogIn, Settings, LogOut, Folder } from 'lucide-react';
 
 // Redesigned user session buttons
 const UserSession = () => {
@@ -29,6 +29,10 @@ const UserSession = () => {
       {session ? (
         <div className="flex items-center gap-4">
                   <p className="text-sm text-white bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-2 rounded-full">{session.user.email}</p>
+          <Link to="/projects" className="flex items-center gap-2 px-4 py-2 rounded-full text-white bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors">
+            <Folder className="h-4 w-4" />
+            <span>Projets</span>
+          </Link>
                   <Link to="/settings" className="flex items-center gap-2 px-4 py-2 rounded-full text-white bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors">
                     <Settings className="h-4 w-4" />
                     <span>Paramètres</span>

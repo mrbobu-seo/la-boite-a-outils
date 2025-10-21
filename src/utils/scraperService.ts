@@ -1,4 +1,6 @@
 import { SearchParams, ScrapingResults, SearchResult, ScrapedPageInfo } from '@/types/scraper';
+import { supabase } from '@/lib/supabaseClient';
+import { Session } from '@supabase/supabase-js';
 
 // Service pour le scraping réel avec ScraperAPI
 export class ScraperService {
@@ -120,12 +122,12 @@ export class ScraperService {
   }
 
   // Effectuer une recherche complète avec scraping des pages
-  static async searchAndScrape(params: SearchParams, accessToken: string, progressCallback: (message: string) => void): Promise<ScrapingResults> {
+  static async searchAndScrape(params: SearchParams & { projectId?: number }, session: Session, progressCallback: (message: string) => void): Promise<ScrapingResults> {
 
     progressCallback(`Démarrage du scraping pour: ${params.query}`);
 
     // 1. Scraper la SERP Google
-    const googleHtml = await this.searchGoogle(params, accessToken, progressCallback);
+    const googleHtml = await this.searchGoogle(params, session.access_token, progressCallback);
     const searchResults = this.parseGoogleResults(googleHtml);
 
     if (searchResults.length === 0) {
@@ -141,7 +143,7 @@ export class ScraperService {
       progressCallback(`Scraping ${index + 1}/${searchResults.length}: ${result.url}`);
       
       try {
-        const pageInfo = await this.scrapePage(result.url, accessToken, progressCallback);
+        const pageInfo = await this.scrapePage(result.url, session.access_token, progressCallback);
         
         results.push({
           url: result.url,
@@ -167,11 +169,30 @@ export class ScraperService {
       }
     }
 
-    return {
+    const scrapingResults = {
       organic_results: results,
       query: params.query,
       timestamp: new Date().toISOString()
     };
+
+    // 3. Enregistrer les résultats si un projet est sélectionné
+    if (params.projectId) {
+      progressCallback('Enregistrement des résultats...');
+      const { error } = await supabase.from('scraper_results').insert([
+        {
+          project_id: params.projectId,
+          user_id: session.user.id,
+          data: scrapingResults,
+          query: params.query,
+          created_at: new Date().toISOString(),
+        },
+      ]);
+      if (error) {
+        progressCallback(`Erreur lors de l'enregistrement des résultats: ${error.message}`);
+      }
+    }
+
+    return scrapingResults;
   }
 
   // Validation des paramètres de recherche
