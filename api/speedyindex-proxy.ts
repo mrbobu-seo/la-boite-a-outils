@@ -20,18 +20,26 @@ export default async function (request, response) {
     return response.status(401).json({ error: 'Invalid token' });
   }
 
-  const { data: apiKeyData, error: apiKeyError } = await supabase
-    .from('api_keys')
-    .select('api_key')
-    .eq('user_id', user.id)
-    .eq('service_name', 'SpeedyIndex')
-    .single();
+  let speedyIndexApiKey;
+  const keyToTest = request.headers['x-speedyindex-key-to-test'];
 
-  if (apiKeyError || !apiKeyData) {
-    return response.status(404).json({ error: 'SpeedyIndex API key not found for this user.' });
+  if (keyToTest) {
+    // This is a key validation request
+    speedyIndexApiKey = keyToTest;
+  } else {
+    // For other requests, fetch the key from the database
+    const { data: apiKeyData, error: apiKeyError } = await supabase
+      .from('api_keys')
+      .select('api_key')
+      .eq('user_id', user.id)
+      .eq('service_name', 'SpeedyIndex')
+      .single();
+
+    if (apiKeyError || !apiKeyData) {
+      return response.status(404).json({ error: 'SpeedyIndex API key not found for this user.' });
+    }
+    speedyIndexApiKey = apiKeyData.api_key;
   }
-
-  const speedyIndexApiKey = apiKeyData.api_key;
 
   const targetPath = request.url.replace('/api/speedyindex-proxy', '');
   const speedyIndexApiUrl = `https://api.speedyindex.com${targetPath}`;
@@ -57,10 +65,13 @@ export default async function (request, response) {
 
     if (!speedyIndexApiResponse.ok) {
       const errorDetails = await speedyIndexApiResponse.text();
-      return response.status(speedyIndexApiResponse.status).json({
-        error: `SpeedyIndex API error: ${speedyIndexApiResponse.statusText}`,
-        details: errorDetails,
-      });
+      try {
+        // Try to parse as JSON, if it fails, return as text
+        const errorJson = JSON.parse(errorDetails);
+        return response.status(speedyIndexApiResponse.status).json(errorJson);
+      } catch (e) {
+        return response.status(speedyIndexApiResponse.status).send(errorDetails);
+      }
     }
 
     const responseBody = await speedyIndexApiResponse.json();

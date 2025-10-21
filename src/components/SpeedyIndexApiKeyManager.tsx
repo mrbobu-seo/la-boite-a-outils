@@ -30,10 +30,17 @@ export const SpeedyIndexApiKeyManager = ({ onApiKeySet, hasValidKey }: SpeedyInd
   const testApiKey = async (keyToTest: string) => {
     setIsTestingKey(true);
     try {
-      // Call the SpeedyIndex proxy to test the API key
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: "Non connecté", description: "Veuillez vous connecter.", variant: "destructive" });
+        setIsTestingKey(false);
+        return;
+      }
+
       const response = await fetch(`/api/speedyindex-proxy/v2/account`, {
         headers: {
-          'Authorization': keyToTest,
+          'Authorization': `Bearer ${session.access_token}`,
+          'X-SpeedyIndex-Key-To-Test': keyToTest,
         },
       });
       
