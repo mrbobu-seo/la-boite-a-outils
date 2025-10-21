@@ -5,12 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 
+interface SpeedyIndexReport {
+  id: string;
+  size: number;
+  processed_count: number;
+  indexed_links: { url: string; title: string; }[];
+  unindexed_links: { url: string; error_code: number; }[];
+  title: string;
+  type: string;
+  created_at: string;
+}
+
 const IndexCheckerTool = () => {
   const [speedyIndexHasValidApiKey, setSpeedyIndexHasValidApiKey] = useState(false);
   const [urls, setUrls] = useState('');
   const [taskId, setTaskId] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
-  const [results, setResults] = useState<any | null>(null);
+  const [results, setResults] = useState<SpeedyIndexReport | null>(null);
   const { toast } = useToast();
 
   const handleGetReport = useCallback(async (id: string) => {
@@ -131,7 +142,7 @@ const IndexCheckerTool = () => {
             <div>
               <h3 className="font-bold">URLs Indexées ({results.indexed_links.length})</h3>
               <ul className="list-disc list-inside">
-                {results.indexed_links.map((link: any) => (
+                {results.indexed_links.map((link: { url: string; title: string; }) => (
                   <li key={link.url}><a href={link.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{link.url}</a></li>
                 ))}
               </ul>
@@ -139,7 +150,7 @@ const IndexCheckerTool = () => {
             <div>
               <h3 className="font-bold">URLs Non Indexées ({results.unindexed_links.length})</h3>
               <ul className="list-disc list-inside">
-                {results.unindexed_links.map((link: any) => (
+                {results.unindexed_links.map((link: { url: string; error_code: number; }) => (
                   <li key={link.url}>{link.url} (Error: {link.error_code})</li>
                 ))}
               </ul>
