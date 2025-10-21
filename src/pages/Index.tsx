@@ -89,7 +89,7 @@ const Index = () => {
               </div>
             </TabsContent>
             <TabsContent value="index-checker">
-              <IndexCheckerTool />
+              <IndexCheckerTool projects={projects} />
             </TabsContent>
           </Tabs>
         ) : (

@@ -1,148 +1,58 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SpeedyIndexApiKeyManager } from './SpeedyIndexApiKeyManager';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabaseClient';
+import { useIndexChecker } from '@/hooks/useIndexChecker';
+import ScraperLogsDisplay from './ScraperLogsDisplay';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Folder } from 'lucide-react';
 
-interface SpeedyIndexReport {
-  id: string;
-  size: number;
-  processed_count: number;
-  indexed_links: { url: string; title: string; }[];
-  unindexed_links: { url: string; error_code: number; }[];
-  title: string;
-  type: string;
-  created_at: string;
+interface Project {
+  id: number;
+  name: string;
 }
 
-const IndexCheckerTool = () => {
+interface IndexCheckerToolProps {
+  projects: Project[];
+}
+
+const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects }) => {
   const [speedyIndexHasValidApiKey, setSpeedyIndexHasValidApiKey] = useState(false);
   const [urls, setUrls] = useState('');
-  const [taskId, setTaskId] = useState<string | null>(null);
-  const [isChecking, setIsChecking] = useState(false);
-  const [results, setResults] = useState<SpeedyIndexReport | null>(null);
-  const { toast } = useToast();
+  const [taskType, setTaskType] = useState<'checker' | 'indexer'>('checker');
+  const { results, isLoading, logs, createTask } = useIndexChecker();
+  const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
+  const [projectId, setProjectId] = useState<number | undefined>(undefined);
 
-  const handleGetReport = useCallback(async (id: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      toast({ title: "Erreur d'authentification", description: "Impossible de récupérer la session utilisateur.", variant: "destructive" });
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/speedyindex-proxy/v2/task/google/checker/fullreport', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ task_id: id }),
-      });
-      const data = await response.json();
-      if (data.code === 0) {
-        setResults(data.result);
-        toast({ title: "Vérification terminée", description: "Les résultats sont disponibles." });
-      } else {
-        throw new Error(data.error || 'Failed to get report.');
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue.';
-      toast({ title: "Erreur lors de la récupération du rapport", description: errorMessage, variant: "destructive" });
-    } finally {
-      setIsChecking(false);
-    }
-  }, [toast]);
 
   useEffect(() => {
     const savedKey = localStorage.getItem('speedyindex_key');
     setSpeedyIndexHasValidApiKey(!!savedKey && savedKey.trim().length > 0);
   }, []);
 
-  useEffect(() => {
-    if (!taskId || !isChecking) return;
-
-    const pollTaskStatus = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.error("No session found for polling task status");
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/speedyindex-proxy/v2/task/google/checker/status', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ task_ids: [taskId] }),
-        });
-        const data = await response.json();
-        if (data.code === 0 && data.result && data.result.length > 0) {
-          const task = data.result[0];
-          if (task.is_completed) {
-            clearInterval(interval);
-            handleGetReport(taskId);
-          }
-        }
-      } catch (error) {
-        console.error("Error polling task status:", error);
-      }
-    };
-
-    const interval = setInterval(pollTaskStatus, 10000); // Poll every 10 seconds
-
-    return () => clearInterval(interval);
-  }, [taskId, isChecking, handleGetReport]);
-
   const handleSpeedyIndexApiKeySet = (apiKey: string) => {
     setSpeedyIndexHasValidApiKey(!!apiKey && apiKey.trim().length > 0);
   };
 
-  const handleCreateTask = async () => {
-    if (!urls.trim()) {
-      toast({ title: "Aucune URL fournie", description: "Veuillez entrer au moins une URL.", variant: "destructive" });
-      return;
-    }
-
-    setIsChecking(true);
-    setResults(null);
-    setTaskId(null);
-
+  const handleCreateTask = () => {
     const urlArray = urls.split('\n').filter(url => url.trim() !== '');
-    const { data: { session } } = await supabase.auth.getSession();
+    createTask(urlArray, taskType, projectId);
+  };
+  
+  const handleIndexSelectedUrls = () => {
+    createTask(selectedUrls, 'indexer', projectId);
+    setSelectedUrls([]);
+  };
 
-    if (!session) {
-      toast({ title: "Erreur d'authentification", description: "Impossible de récupérer la session utilisateur.", variant: "destructive" });
-      setIsChecking(false);
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/speedyindex-proxy/v2/task/google/checker/create', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ urls: urlArray }),
-      });
-
-      const data = await response.json();
-
-      if (data.code === 0 && data.task_id) {
-        setTaskId(data.task_id);
-        toast({ title: "Tâche créée", description: `La vérification a commencé pour ${urlArray.length} URLs.` });
-      } else {
-        throw new Error(data.error || 'Failed to create task.');
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue.';
-      toast({ title: "Erreur lors de la création de la tâche", description: errorMessage, variant: "destructive" });
-      setIsChecking(false);
+  const handleUrlSelection = (url: string, checked: boolean) => {
+    if (checked) {
+      setSelectedUrls(prev => [...prev, url]);
+    } else {
+      setSelectedUrls(prev => prev.filter(u => u !== url));
     }
   };
 
@@ -165,10 +75,24 @@ const IndexCheckerTool = () => {
               </ul>
             </div>
             <div>
-              <h3 className="font-bold">URLs Non Indexées ({results.unindexed_links.length})</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold">URLs Non Indexées ({results.unindexed_links.length})</h3>
+                {selectedUrls.length > 0 && (
+                  <Button onClick={handleIndexSelectedUrls} size="sm">
+                    Indexer les URLs sélectionnées ({selectedUrls.length})
+                  </Button>
+                )}
+              </div>
               <ul className="list-disc list-inside">
                 {results.unindexed_links.map((link: { url: string; error_code: number; }) => (
-                  <li key={link.url}>{link.url} (Error: {link.error_code})</li>
+                  <li key={link.url} className="flex items-center gap-2">
+                    <Checkbox
+                      id={link.url}
+                      onCheckedChange={(checked) => handleUrlSelection(link.url, !!checked)}
+                      checked={selectedUrls.includes(link.url)}
+                    />
+                    <label htmlFor={link.url}>{link.url} (Error: {link.error_code})</label>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -185,37 +109,68 @@ const IndexCheckerTool = () => {
         hasValidKey={speedyIndexHasValidApiKey}
       />
       {speedyIndexHasValidApiKey && (
-        <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-indigo-600">Index Checker</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Textarea
-                value={urls}
-                onChange={(e) => setUrls(e.target.value)}
-                placeholder="Entrez une URL par ligne"
-                rows={10}
-              />
-              <Button
-                onClick={handleCreateTask}
-                disabled={isChecking}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-              >
-                {isChecking ? 'Vérification en cours...' : 'Lancer la vérification'}
-              </Button>
-            </div>
-            {isChecking && !results && (
-              <div className="mt-4 text-center">
-                <p>Vérification en cours... Veuillez patienter.</p>
-                <p>(Cela peut prendre plusieurs minutes)</p>
+        <>
+          <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-indigo-600">Index Checker & Indexation</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <RadioGroup defaultValue="checker" onValueChange={(value: 'checker' | 'indexer') => setTaskType(value)} className="flex space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="checker" id="checker" />
+                    <Label htmlFor="checker">Vérifier l'indexation</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="indexer" id="indexer" />
+                    <Label htmlFor="indexer">Indexer les URLs</Label>
+                  </div>
+                </RadioGroup>
+                <Textarea
+                  value={urls}
+                  onChange={(e) => setUrls(e.target.value)}
+                  placeholder="Entrez une URL par ligne"
+                  rows={10}
+                />
+                <div className="space-y-2">
+                  <Label htmlFor="project" className="flex items-center gap-2">
+                    <Folder className="h-4 w-4" />
+                    Projet (Optionnel)
+                  </Label>
+                  <Select
+                    value={projectId ? String(projectId) : "no-project"}
+                    onValueChange={(value) => setProjectId(value === "no-project" ? undefined : parseInt(value))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Aucun projet" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="no-project">Aucun projet</SelectItem>
+                      {projects.map(project => (
+                        <SelectItem key={project.id} value={String(project.id)}>{project.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  onClick={handleCreateTask}
+                  disabled={isLoading}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  {isLoading ? 'Tâche en cours...' : `Lancer ${taskType === 'checker' ? 'la vérification' : 'l\'indexation'}`}
+                </Button>
               </div>
-            )}
-            <div className="mt-8">
-              {renderResults()}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+          {logs.length > 0 && (
+            <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
+              <ScraperLogsDisplay logs={logs} />
+            </Card>
+          )}
+          <div className="mt-8">
+            {renderResults()}
+          </div>
+        </>
       )}
     </div>
   );
