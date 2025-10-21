@@ -45,8 +45,8 @@ export const SearchForm = ({ onSearch, isLoading, projects }: SearchFormProps) =
   return (
     <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
       <div className="flex items-center gap-3 mb-6">
-        <Search className="h-6 w-6 text-primary" />
-        <h2 className="text-2xl font-bold gradient-text">Paramètres de recherche</h2>
+        <Search className="h-6 w-6 text-indigo-600" />
+        <h2 className="text-2xl font-bold text-indigo-600">Paramètres de recherche</h2>
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">

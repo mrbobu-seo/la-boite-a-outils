@@ -57,7 +57,7 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-12 text-center">
-        <h1 className="text-5xl font-bold mb-4 gradient-text">
+        <h1 className="text-5xl font-bold mb-4 text-indigo-600">
           La boite à outils
         </h1>
         <p className="text-xl text-black mb-8 max-w-3xl mx-auto">

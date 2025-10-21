@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { Key } from 'lucide-react';
 
 const Settings = () => {
   const [scraperApiKey, setScraperApiKey] = useState('');
@@ -56,12 +57,15 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center">
+    <div className="min-h-screen flex flex-col justify-center items-center">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-lg">
-        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Paramètres</h1>
+        <h1 className="text-3xl font-bold mb-6 text-center text-indigo-600">Paramètres</h1>
         <form className="space-y-6" onSubmit={handleSave}>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Clé API ScraperAPI</label>
+            <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+              <Key className="h-4 w-4 text-indigo-600" />
+              Clé API ScraperAPI
+            </label>
             <input
               type="text"
               value={scraperApiKey}
@@ -70,7 +74,10 @@ const Settings = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Clé API SpeedyIndex</label>
+            <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+              <Key className="h-4 w-4 text-indigo-600" />
+              Clé API SpeedyIndex
+            </label>
             <input
               type="text"
               value={speedyIndexApiKey}
