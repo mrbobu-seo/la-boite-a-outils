@@ -37,7 +37,7 @@ export const SpeedyIndexApiKeyManager = ({ onApiKeySet, hasValidKey }: SpeedyInd
         return;
       }
 
-      const response = await fetch(`/api/speedyindex-proxy/v2/account`, {
+      const response = await fetch(`/api/speedyindex-proxy/v2/account?_=${new Date().getTime()}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'X-SpeedyIndex-Key-To-Test': keyToTest,
