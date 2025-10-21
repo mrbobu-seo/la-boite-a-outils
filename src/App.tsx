@@ -12,6 +12,7 @@ import UpdatePassword from "./pages/UpdatePassword";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import NotFound from "./pages/NotFound";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <SpeedInsights />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
