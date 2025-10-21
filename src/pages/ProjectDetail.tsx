@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { ScrapingResults } from '@/types/scraper';
+import { Session } from '@supabase/supabase-js';
 
 interface Project {
   id: number;
@@ -11,47 +12,64 @@ interface Project {
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
-  const [results, setResults] = useState<ScrapingResults[]>([]);
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    const fetchProject = async () => {
-      if (id) {
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('id', id)
-          .single();
-
-        if (error) {
-          console.error('Error fetching project:', error);
-        } else {
-          setProject(data);
-        }
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      if (!session) {
+        navigate('/auth');
       }
     };
+    getSession();
+  }, [navigate]);
 
-    const fetchResults = async () => {
-      if (id) {
-        const { data, error } = await supabase
-          .from('scraper_results')
-          .select('*')
-          .eq('project_id', id)
-          .order('created_at', { ascending: false });
+  useEffect(() => {
+    if (session) {
+      const fetchProject = async () => {
+        if (id) {
+          const { data, error } = await supabase
+            .from('projects')
+            .select('*')
+            .eq('id', id)
+            .single();
 
-        if (error) {
-          console.error('Error fetching results:', error);
-        } else {
-          setResults(data);
+          if (error) {
+            console.error('Error fetching project:', error);
+            setLoading(false);
+          } else {
+            setProject(data);
+          }
         }
-      }
-    };
+      };
 
-    fetchProject();
-    fetchResults();
-  }, [id]);
+      const fetchResults = async () => {
+        if (id) {
+          const { data, error } = await supabase
+            .from('scraper_results')
+            .select('*')
+            .eq('project_id', id)
+            .order('created_at', { ascending: false });
 
-  
+          if (error) {
+            console.error('Error fetching results:', error);
+          } else {
+            setResults(data);
+          }
+          setLoading(false);
+        }
+      };
+
+      fetchProject();
+      fetchResults();
+    }
+  }, [id, session]);
+
   const downloadJSON = (data: any, query: string) => {
     const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
       JSON.stringify(data, null, 2)
@@ -64,8 +82,12 @@ const ProjectDetail = () => {
     link.click();
   };
 
-  if (!project) {
+  if (loading) {
     return <div>Chargement...</div>;
+  }
+
+  if (!project) {
+    return <div>Projet non trouvé</div>;
   }
 
   return (
