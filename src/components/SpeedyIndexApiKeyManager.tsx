@@ -86,7 +86,7 @@ export const SpeedyIndexApiKeyManager = ({ onApiKeySet, hasValidKey }: SpeedyInd
 
   if (hasValidKey && !showKeyInput) {
     return (
-      <Card className="glass-card p-6">
+      <Card className="bg-gray-50 p-6 rounded-lg shadow-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <CheckCircle className="h-5 w-5 text-green-500" />
@@ -109,15 +109,15 @@ export const SpeedyIndexApiKeyManager = ({ onApiKeySet, hasValidKey }: SpeedyInd
   }
 
   return (
-    <Card className="glass-card p-6">
+    <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
       <div className="flex items-center gap-3 mb-4">
-        <Key className="h-6 w-6 text-primary" />
-        <h2 className="text-2xl font-bold gradient-text">Configuration API SpeedyIndex</h2>
+        <Key className="h-6 w-6 text-indigo-600" />
+        <h2 className="text-2xl font-bold text-indigo-600">Configuration API SpeedyIndex</h2>
       </div>
 
-      <Alert className="mb-6 border-blue-500/20 bg-blue-500/10">
-        <AlertTriangle className="h-4 w-4 text-blue-500" />
-        <AlertDescription className="text-blue-200">
+      <Alert className="mb-6 border-indigo-500/20 bg-indigo-500/10">
+        <AlertTriangle className="h-4 w-4 text-indigo-500" />
+        <AlertDescription className="text-indigo-700">
           <strong>Proxy Serverless :</strong> Cette application utilise un proxy serverless pour communiquer avec SpeedyIndex API.
           Votre clé API est sécurisée et n'est pas exposée côté client.
         </AlertDescription>
@@ -132,14 +132,13 @@ export const SpeedyIndexApiKeyManager = ({ onApiKeySet, hasValidKey }: SpeedyInd
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder="Entrez votre clé API SpeedyIndex"
-            className="transition-all duration-300 focus:ring-2 focus:ring-primary/50"
             required
           />
           <p className="text-xs text-muted-foreground">
             Obtenez votre clé sur{' '}
             <a 
               href="https://www.speedyindex.com" 
-              className="text-primary hover:underline"
+              className="text-indigo-600 hover:underline"
               target="_blank" 
               rel="noopener noreferrer"
             >
@@ -151,8 +150,7 @@ export const SpeedyIndexApiKeyManager = ({ onApiKeySet, hasValidKey }: SpeedyInd
         <Button
           type="submit"
           disabled={isTestingKey || !apiKey.trim()}
-          variant="neon"
-          className="w-full"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
         >
           {isTestingKey ? (
             <>
