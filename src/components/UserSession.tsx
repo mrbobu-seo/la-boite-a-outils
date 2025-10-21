@@ -25,7 +25,7 @@ const UserSession = () => {
   };
 
   return (
-    <div className="absolute top-4 right-4">
+    <div className="">
       {session ? (
         <div className="flex items-center gap-4">
                   <p className="text-sm text-white bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-2 rounded-full">{session.user.email}</p>

@@ -7,7 +7,6 @@ import heroImage from '@/assets/hero-scraper.jpg';
 import { Bot, Zap, Globe, Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ScraperLogsDisplay from '@/components/ScraperLogsDisplay';
-import UserSession from '@/components/UserSession';
 
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabaseClient';
@@ -56,7 +55,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <UserSession />
       <div className="container mx-auto px-4 py-12 text-center">
         <h1 className="text-5xl font-bold mb-4 gradient-text">
           La boite à outils

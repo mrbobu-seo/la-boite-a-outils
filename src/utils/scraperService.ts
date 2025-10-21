@@ -184,6 +184,9 @@ export class ScraperService {
           user_id: session.user.id,
           data: scrapingResults,
           query: params.query,
+          country_code: params.countryCode,
+          tld: params.tld,
+          language: params.language,
           created_at: new Date().toISOString(),
         },
       ]);
