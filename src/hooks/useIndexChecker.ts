@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -19,6 +19,7 @@ export const useIndexChecker = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [taskId, setTaskId] = useState<string | null>(null);
+  const pollingInterval = useRef<NodeJS.Timeout | null>(null);
 
   const addLog = useCallback((message: string) => {
     setLogs((prevLogs) => [...prevLogs, message]);
@@ -59,6 +60,13 @@ export const useIndexChecker = () => {
     }
   }, [toast, addLog]);
 
+  const stopPolling = useCallback(() => {
+    if (pollingInterval.current) {
+      clearInterval(pollingInterval.current);
+      pollingInterval.current = null;
+    }
+  }, []);
+
   const pollTaskStatus = useCallback(async (id: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -80,15 +88,16 @@ export const useIndexChecker = () => {
         const task = data.result[0];
         addLog(`Statut de la tâche ${id}: ${task.is_completed ? 'Terminée' : 'En cours'}`);
         if (task.is_completed) {
-          // The interval is cleared in the cleanup function of the useEffect in the component
+          stopPolling();
           getReport(id);
         }
       }
     } catch (error) {
       console.error("Error polling task status:", error);
       addLog("Erreur lors de la récupération du statut de la tâche.");
+      stopPolling();
     }
-  }, [addLog, getReport]);
+  }, [addLog, getReport, stopPolling]);
 
   const createTask = async (urls: string[], type: 'checker' | 'indexer', projectId?: number) => {
     setLogs([]);
@@ -100,6 +109,7 @@ export const useIndexChecker = () => {
     setIsLoading(true);
     setResults(null);
     setTaskId(null);
+    stopPolling(); // Clear any existing interval
     addLog(`Création d'une tâche de type ${type} pour ${urls.length} URLs...`);
 
     const { data: { session } } = await supabase.auth.getSession();
@@ -139,19 +149,11 @@ export const useIndexChecker = () => {
         }
 
         if (type === 'checker') {
-          const interval = setInterval(() => {
+          pollingInterval.current = setInterval(() => {
             pollTaskStatus(data.task_id).catch(console.error);
           }, 10000);
-          // Cleanup interval on component unmount or when task is finished
-          const cleanup = () => clearInterval(interval);
-          // This is a bit of a hack, but it's the easiest way to handle cleanup
-          // without a major refactor of the hook to be used in a useEffect.
-          setTimeout(() => {
-            if(!isLoading) cleanup();
-          }, 10 * 60 * 1000); // Stop polling after 10 minutes
-
         } else {
-          addLog("La tâche d'indexation a été soumise. Le rapport ne sera pas récupéré automatically.");
+          addLog("La tâche d'indexation a été soumise. Le rapport ne sera pas récupéré automatiquement.");
           setIsLoading(false);
         }
       } else {
@@ -162,8 +164,9 @@ export const useIndexChecker = () => {
       addLog(`Erreur lors de la création de la tâche: ${errorMessage}`);
       toast({ title: "Erreur lors de la création de la tâche", description: errorMessage, variant: "destructive" });
       setIsLoading(false);
+      stopPolling();
     }
   };
 
-  return { results, isLoading, logs, createTask, getReport, pollTaskStatus };
+  return { results, isLoading, logs, createTask };
 };
