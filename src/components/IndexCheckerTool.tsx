@@ -4,6 +4,7 @@ import { SpeedyIndexApiKeyManager } from './SpeedyIndexApiKeyManager';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabaseClient';
 
 interface SpeedyIndexReport {
   id: string;
@@ -25,12 +26,17 @@ const IndexCheckerTool = () => {
   const { toast } = useToast();
 
   const handleGetReport = useCallback(async (id: string) => {
-    const apiKey = localStorage.getItem('speedyindex_key');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({ title: "Erreur d'authentification", description: "Impossible de récupérer la session utilisateur.", variant: "destructive" });
+      return;
+    }
+
     try {
       const response = await fetch('/api/speedyindex-proxy/v2/task/google/checker/fullreport', {
         method: 'POST',
         headers: {
-          'Authorization': apiKey!,
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ task_id: id }),
@@ -59,12 +65,17 @@ const IndexCheckerTool = () => {
     if (!taskId || !isChecking) return;
 
     const pollTaskStatus = async () => {
-      const apiKey = localStorage.getItem('speedyindex_key');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error("No session found for polling task status");
+        return;
+      }
+
       try {
         const response = await fetch('/api/speedyindex-proxy/v2/task/google/checker/status', {
           method: 'POST',
           headers: {
-            'Authorization': apiKey!,
+            'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ task_ids: [taskId] }),
@@ -102,13 +113,19 @@ const IndexCheckerTool = () => {
     setTaskId(null);
 
     const urlArray = urls.split('\n').filter(url => url.trim() !== '');
-    const apiKey = localStorage.getItem('speedyindex_key');
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      toast({ title: "Erreur d'authentification", description: "Impossible de récupérer la session utilisateur.", variant: "destructive" });
+      setIsChecking(false);
+      return;
+    }
 
     try {
       const response = await fetch('/api/speedyindex-proxy/v2/task/google/checker/create', {
         method: 'POST',
         headers: {
-          'Authorization': apiKey!,
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ urls: urlArray }),
