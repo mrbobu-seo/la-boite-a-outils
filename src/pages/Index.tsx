@@ -6,6 +6,7 @@ import { useScraper } from '@/hooks/useScraper';
 import heroImage from '@/assets/hero-scraper.jpg';
 import { Bot, Zap, Globe, Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
 import ScraperLogsDisplay from '@/components/ScraperLogsDisplay';
 
 import { Session } from '@supabase/supabase-js';
@@ -59,7 +60,7 @@ const Index = () => {
         <h1 className="text-5xl font-bold mb-4 gradient-text">
           La boite à outils
         </h1>
-        <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+        <p className="text-xl text-black mb-8 max-w-3xl mx-auto">
           Votre suite d'outils intelligents pour l'analyse et l'extraction de données web.
         </p>
       </div>
@@ -75,8 +76,12 @@ const Index = () => {
             <TabsContent value="scraper">
               <div className="space-y-12">
                 <SearchForm onSearch={search} isLoading={isLoading} projects={projects} />
-                <ResultsDisplay results={results} />
-                <ScraperLogsDisplay logs={logs} />
+                <Card className="glass-card p-8 animate-float">
+                  <ResultsDisplay results={results} />
+                </Card>
+                <Card className="glass-card p-8 animate-float">
+                  <ScraperLogsDisplay logs={logs} />
+                </Card>
               </div>
             </TabsContent>
             <TabsContent value="index-checker">

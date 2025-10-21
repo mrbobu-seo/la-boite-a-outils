@@ -140,9 +140,7 @@ export const SearchForm = ({ onSearch, isLoading, projects }: SearchFormProps) =
         <Button
           type="submit"
           disabled={isLoading}
-          variant="neon"
-          size="lg"
-          className="w-full"
+          className="w-full bg-indigo-600 hover:bg-indigo-700"
         >
           {isLoading ? (
             <>

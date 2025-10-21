@@ -94,7 +94,7 @@ const ProjectDetail = () => {
     <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-12">
         <div className="bg-white p-8 rounded-lg shadow-md w-full">
-          <h1 className="text-3xl font-bold mb-6 text-gray-800">{project.name}</h1>
+          <h1 className="text-3xl font-bold mb-6 text-gray-800 gradient-text">{project.name}</h1>
 
           <div className="space-y-4">
             {results.length > 0 ? (
@@ -104,7 +104,7 @@ const ProjectDetail = () => {
                     <h2 className="text-xl font-semibold text-gray-900">{result.query}</h2>
                     <button
                       onClick={() => downloadJSON(result.data, result.query)}
-                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                      className="flex-shrink-0 justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
                       Télécharger
                     </button>
