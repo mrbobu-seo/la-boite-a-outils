@@ -10,11 +10,23 @@ interface Project {
   created_at: string;
 }
 
+interface ScraperResultFromDB {
+  id: number;
+  user_id: string;
+  data: ScrapingResults;
+  query: string;
+  country_code: string;
+  tld: string;
+  language: string;
+  created_at: string;
+  project_id: number;
+}
+
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<ScraperResultFromDB[]>([]);
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
 
@@ -59,7 +71,7 @@ const ProjectDetail = () => {
           if (error) {
             console.error('Error fetching results:', error);
           } else {
-            setResults(data);
+            setResults(data as ScraperResultFromDB[]);
           }
           setLoading(false);
         }
@@ -70,7 +82,7 @@ const ProjectDetail = () => {
     }
   }, [id, session]);
 
-  const downloadJSON = (data: any, query: string) => {
+  const downloadJSON = (data: ScrapingResults, query: string) => {
     const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
       JSON.stringify(data, null, 2)
     )}`;
