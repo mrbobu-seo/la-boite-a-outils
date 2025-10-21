@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { Key, AlertTriangle, CheckCircle } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 interface SpeedyIndexApiKeyManagerProps {
   onApiKeySet: (apiKey: string) => void;
@@ -46,6 +47,15 @@ export const SpeedyIndexApiKeyManager = ({ onApiKeySet, hasValidKey }: SpeedyInd
             title: "Clé API SpeedyIndex validée",
             description: `Balance: Indexer: ${data.balance.indexer}, Checker: ${data.balance.checker}`,
           });
+
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.from('api_keys').upsert(
+              { user_id: user.id, service_name: 'SpeedyIndex', api_key: keyToTest },
+              { onConflict: 'user_id, service_name' }
+            );
+          }
+
           return true;
         } else {
           throw new Error(data.error || 'Invalid response from SpeedyIndex API.');
