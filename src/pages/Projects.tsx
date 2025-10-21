@@ -57,7 +57,7 @@ const Projects = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-12">
         <div className="bg-white p-8 rounded-lg shadow-md w-full">
           <h1 className="text-3xl font-bold mb-6 text-gray-800">Mes Projets</h1>
