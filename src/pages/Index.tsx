@@ -76,10 +76,10 @@ const Index = () => {
             <TabsContent value="scraper">
               <div className="space-y-12">
                 <SearchForm onSearch={search} isLoading={isLoading} projects={projects} />
-                <Card className="glass-card p-8 animate-float">
+                <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
                   <ResultsDisplay results={results} />
                 </Card>
-                <Card className="glass-card p-8 animate-float">
+                <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
                   <ScraperLogsDisplay logs={logs} />
                 </Card>
               </div>

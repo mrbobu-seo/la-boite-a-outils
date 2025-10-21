@@ -43,7 +43,7 @@ export const SearchForm = ({ onSearch, isLoading, projects }: SearchFormProps) =
   };
 
   return (
-    <Card className="glass-card p-8 animate-float">
+    <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
       <div className="flex items-center gap-3 mb-6">
         <Search className="h-6 w-6 text-primary" />
         <h2 className="text-2xl font-bold gradient-text">Paramètres de recherche</h2>
@@ -140,7 +140,7 @@ export const SearchForm = ({ onSearch, isLoading, projects }: SearchFormProps) =
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-indigo-600 hover:bg-indigo-700"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
         >
           {isLoading ? (
             <>
