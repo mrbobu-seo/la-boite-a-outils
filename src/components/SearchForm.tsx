@@ -20,8 +20,8 @@ interface SearchFormProps {
 export const SearchForm = ({ onSearch, isLoading, projects }: SearchFormProps) => {
   const [params, setParams] = useState<SearchParams>({
     query: '',
-    countryCode: 'fr',
-    tld: 'fr',
+    countryCode: 'be',
+    tld: 'com',
     language: 'fr'
   });
   const [projectId, setProjectId] = useState<number | undefined>(undefined);

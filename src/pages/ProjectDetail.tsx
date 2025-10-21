@@ -112,7 +112,7 @@ const ProjectDetail = () => {
                   <p className="text-sm text-gray-500">Date: {new Date(result.created_at).toLocaleString()}</p>
                   <details className="mt-4">
                     <summary className="cursor-pointer">Voir les résultats</summary>
-                    <pre className="mt-2 p-4 bg-gray-200 rounded-md overflow-x-auto">
+                    <pre className="mt-2 p-4 bg-gray-200 rounded-md overflow-x-auto text-gray-800">
                       {JSON.stringify(result.data, null, 2)}
                     </pre>
                   </details>
