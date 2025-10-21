@@ -105,9 +105,7 @@ const Index = () => {
           <p className="text-muted-foreground">
             La boite à outils - Outils de scraping intelligents pour l'analyse web
           </p>
-          <p className="text-muted-foreground text-sm mt-2">
-            Développé avec ❤️ par <a href="https://x.com/MisteurBobu" target="_blank" rel="noopener noreferrer" className="hover:underline">@MisteurBobu</a>
-          </p>
+          <p className="text-muted-foreground text-sm mt-2">Vibe Coder avec <a href="https://twitter.com/MisteurBobu" target="_blank" rel="noopener noreferrer" className="hover:underline">❤️</a></p>
         </div>
       </footer>
     </div>
