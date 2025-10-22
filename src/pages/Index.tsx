@@ -3,8 +3,7 @@ import { SearchForm } from '@/components/SearchForm';
 import { ResultsDisplay } from '@/components/ResultsDisplay';
 import IndexCheckerTool from '@/components/IndexCheckerTool';
 import { useScraper } from '@/hooks/useScraper';
-import heroImage from '@/assets/hero-scraper.jpg';
-import { Bot, Zap, Globe, Download } from 'lucide-react';
+import { ScraperApiKeyManager } from '@/components/ScraperApiKeyManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import ScraperLogsDisplay from '@/components/ScraperLogsDisplay';
@@ -21,6 +20,7 @@ const Index = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const { results, isLoading, search, logs } = useScraper();
+  const [scraperApiHasValidKey, setScraperApiHasValidKey] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -30,6 +30,11 @@ const Index = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
+
+    const savedScraperKey = localStorage.getItem('scraperapi_key');
+    if (savedScraperKey) {
+      setScraperApiHasValidKey(true);
+    }
 
     return () => subscription.unsubscribe();
   }, []);
@@ -54,6 +59,10 @@ const Index = () => {
     fetchProjects();
   }, [session]);
 
+  const handleScraperApiKeySet = (apiKey: string) => {
+    setScraperApiHasValidKey(!!apiKey && apiKey.trim().length > 0);
+  };
+
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-12 text-center">
@@ -75,7 +84,8 @@ const Index = () => {
             </TabsList>
             <TabsContent value="scraper">
               <div className="space-y-12">
-                <SearchForm onSearch={search} isLoading={isLoading} projects={projects} />
+                <ScraperApiKeyManager onApiKeySet={handleScraperApiKeySet} hasValidKey={scraperApiHasValidKey} />
+                {scraperApiHasValidKey && <SearchForm onSearch={search} isLoading={isLoading} projects={projects} />}
                 {results && (
                   <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
                     <ResultsDisplay results={results} />
