@@ -135,7 +135,7 @@ const ProjectDetail = () => {
     }
   };
 
-  const downloadJSON = (data: any, query: string) => {
+  const downloadJSON = (data: ScrapingResults, query: string) => {
     const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
       JSON.stringify(data, null, 2)
     )}`;
