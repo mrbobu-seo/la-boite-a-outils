@@ -106,15 +106,10 @@ const Index = () => {
             <TabsContent value="scraper">
               <div className="space-y-12">
                 <ScraperApiKeyManager onApiKeySet={handleScraperApiKeySet} hasValidKey={scraperApiHasValidKey} />
-                {scraperApiHasValidKey && <SearchForm onSearch={search} isLoading={isLoading} projects={projects} projectId={scraperProjectId} onProjectIdChange={setScraperProjectId} onProjectCreated={handleProjectCreated} />}
+                {scraperApiHasValidKey && <SearchForm onSearch={search} isLoading={isLoading} projects={projects} projectId={scraperProjectId} onProjectIdChange={setScraperProjectId} onProjectCreated={handleProjectCreated} results={results} onSave={saveResults} />}
                 {results && (
                   <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
                     <ResultsDisplay results={results} />
-                    {scraperProjectId && !isSaved && (
-                      <Button onClick={() => saveResults(scraperProjectId)} className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white">
-                        Sauvegarder les résultats dans le projet
-                      </Button>
-                    )}
                   </Card>
                 )}
                 {logs.length > 0 && (

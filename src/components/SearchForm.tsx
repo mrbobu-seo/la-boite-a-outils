@@ -10,8 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SearchParams } from '@/types/scraper';
-import { Search, Globe, Code, Languages, Folder, PlusCircle } from 'lucide-react';
+import { SearchParams, ScrapingResults } from '@/types/scraper';
+import { Search, Globe, Code, Languages, Folder, PlusCircle, Save } from 'lucide-react';
 import { CreateProjectModal } from './CreateProjectModal';
 
 interface Project {
@@ -20,15 +20,17 @@ interface Project {
 }
 
 interface SearchFormProps {
-  onSearch: (params: SearchParams) => void;
+  onSearch: (params: SearchParams, projectId: number | undefined) => void;
   isLoading: boolean;
   projects: Project[];
   projectId: number | undefined;
   onProjectIdChange: (id: number | undefined) => void;
   onProjectCreated: (project: Project) => void;
+  results: ScrapingResults | null;
+  onSave: (projectId: number) => void;
 }
 
-export const SearchForm = ({ onSearch, isLoading, projects, projectId, onProjectIdChange, onProjectCreated }: SearchFormProps) => {
+export const SearchForm = ({ onSearch, isLoading, projects, projectId, onProjectIdChange, onProjectCreated, results, onSave }: SearchFormProps) => {
   const [params, setParams] = useState<SearchParams>({
     query: '',
     countryCode: 'be',
@@ -39,7 +41,7 @@ export const SearchForm = ({ onSearch, isLoading, projects, projectId, onProject
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(params);
+    onSearch(params, projectId);
   };
 
   const updateParam = (key: keyof SearchParams, value: string) => {
@@ -132,28 +134,38 @@ export const SearchForm = ({ onSearch, isLoading, projects, projectId, onProject
           <div className="space-y-2">
             <Label htmlFor="project" className="flex items-center gap-2">
               <Folder className="h-4 w-4" />
-              Projet (Optionnel)
+              Projet
             </Label>
-            <Select
-              value={projectId ? String(projectId) : "no-project"}
-              onValueChange={handleProjectChange}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Aucun projet" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="no-project">Aucun projet</SelectItem>
-                {projects.map(project => (
-                  <SelectItem key={project.id} value={String(project.id)}>{project.name}</SelectItem>
-                ))}
-                <SelectItem value="create-new-project">
-                  <div className="flex items-center gap-2">
-                    <PlusCircle className="h-4 w-4" />
-                    Créer un nouveau projet
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Select
+                value={projectId ? String(projectId) : "no-project"}
+                onValueChange={handleProjectChange}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Aucun projet" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="no-project">Aucun projet (sauvegarde manuelle)</SelectItem>
+                  {projects.map(project => (
+                    <SelectItem key={project.id} value={String(project.id)}>{project.name}</SelectItem>
+                  ))}
+                  <SelectItem value="create-new-project">
+                    <div className="flex items-center gap-2">
+                      <PlusCircle className="h-4 w-4" />
+                      Créer un nouveau projet
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                onClick={() => onSave(projectId!)}
+                disabled={!projectId || isLoading || !results}
+                title="Sauvegarder les résultats affichés dans le projet sélectionné"
+              >
+                <Save className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           <Button
@@ -165,12 +177,12 @@ export const SearchForm = ({ onSearch, isLoading, projects, projectId, onProject
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
                 Scraping en cours...
-              </>
+              </>            
             ) : (
               <>
-                <Search className="h-4 w-4" />
+                <Search className="h-4 w-4 mr-2" />
                 Lancer le scraping
-              </>
+              </>            
             )}
           </Button>
         </form>
