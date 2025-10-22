@@ -1,8 +1,4 @@
 {
-  "functions": {
-    "api/proxy.ts": {},
-    "api/speedyindex-proxy.ts": {}
-  },
   "rewrites": [
     {
       "source": "/api/proxy",
@@ -11,6 +7,10 @@
     {
       "source": "/api/speedyindex-proxy/(.*)",
       "destination": "/api/speedyindex-proxy"
+    },
+    {
+      "source": "/api/scraperapi-proxy/(.*)",
+      "destination": "/api/scraperapi-proxy"
     },
     {
       "source": "/(.*)",
