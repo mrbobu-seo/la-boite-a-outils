@@ -3,6 +3,7 @@ import { SearchParams, ScrapingResults } from '@/types/scraper';
 import { ScraperService } from '@/utils/scraperService';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
+import { Session } from '@supabase/supabase-js';
 
 export const useScraper = () => {
   const { toast } = useToast();
@@ -16,17 +17,17 @@ export const useScraper = () => {
     setLogs((prevLogs) => [...prevLogs, message]);
   };
 
-  const _saveScrape = async (projectId: number, resultsToSave: ScrapingResults, session: any) => {
+  const _saveScrape = async (projectId: number, resultsToSave: ScrapingResults, session: Session, params: SearchParams) => {
     try {
       const { data, error } = await supabase.from('scraper_results').insert([
         {
           project_id: projectId,
           user_id: session.user.id,
           data: resultsToSave,
-          query: resultsToSave.search_information.query_displayed,
-          country_code: resultsToSave.search_parameters.country,
-          tld: resultsToSave.search_parameters.google_domain,
-          language: resultsToSave.search_parameters.hl,
+          query: resultsToSave.query,
+          country_code: params.countryCode,
+          tld: params.tld,
+          language: params.language,
         },
       ]).select('id');
 
@@ -94,7 +95,7 @@ export const useScraper = () => {
       });
 
       if (projectId) {
-        await _saveScrape(projectId, scrapingResults, session);
+        await _saveScrape(projectId, scrapingResults, session, params);
       }
     } catch (error) {
       console.error('Erreur lors du scraping:', error);
@@ -110,7 +111,7 @@ export const useScraper = () => {
     }
   };
 
-  const saveResults = async (projectId: number) => {
+  const saveResults = async (projectId: number, params: SearchParams) => {
     if (!results) return;
 
     const { data: { session } } = await supabase.auth.getSession();
@@ -135,10 +136,10 @@ export const useScraper = () => {
             project_id: projectId,
             user_id: session.user.id,
             data: results,
-            query: results.search_information.query_displayed,
-            country_code: results.search_parameters.country,
-            tld: results.search_parameters.google_domain,
-            language: results.search_parameters.hl,
+            query: results.query,
+            country_code: params.countryCode,
+            tld: params.tld,
+            language: params.language,
           },
         ]).select('id');
 

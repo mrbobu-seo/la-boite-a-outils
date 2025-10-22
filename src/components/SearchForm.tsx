@@ -27,7 +27,7 @@ interface SearchFormProps {
   onProjectIdChange: (id: number | undefined) => void;
   onProjectCreated: (project: Project) => void;
   results: ScrapingResults | null;
-  onSave: (projectId: number) => void;
+  onSave: (projectId: number, params: SearchParams) => void;
 }
 
 export const SearchForm = ({ onSearch, isLoading, projects, projectId, onProjectIdChange, onProjectCreated, results, onSave }: SearchFormProps) => {
@@ -159,7 +159,7 @@ export const SearchForm = ({ onSearch, isLoading, projects, projectId, onProject
               </Select>
               <Button
                 type="button"
-                onClick={() => onSave(projectId!)}
+                onClick={() => onSave(projectId!, params)}
                 disabled={!projectId || isLoading || !results}
                 title="Sauvegarder les résultats affichés dans le projet sélectionné"
               >
