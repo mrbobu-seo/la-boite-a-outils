@@ -99,6 +99,7 @@ const ProjectDetail = () => {
         if (speedyIndexError) {
           console.error('Error fetching speedy index tasks:', speedyIndexError);
         } else {
+          console.log('SpeedyIndex Tasks Data:', speedyIndexData);
           setSpeedyIndexTasks(speedyIndexData as SpeedyIndexTask[]);
         }
 
