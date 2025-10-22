@@ -21,6 +21,7 @@ const Index = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const { results, isLoading, search, logs } = useScraper();
   const [scraperApiHasValidKey, setScraperApiHasValidKey] = useState(false);
+  const [speedyIndexHasValidKey, setSpeedyIndexHasValidKey] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -34,6 +35,11 @@ const Index = () => {
     const savedScraperKey = localStorage.getItem('scraperapi_key');
     if (savedScraperKey) {
       setScraperApiHasValidKey(true);
+    }
+
+    const savedSpeedyIndexKey = localStorage.getItem('speedyindex_key');
+    if (savedSpeedyIndexKey) {
+      setSpeedyIndexHasValidKey(true);
     }
 
     return () => subscription.unsubscribe();
@@ -61,6 +67,10 @@ const Index = () => {
 
   const handleScraperApiKeySet = (apiKey: string) => {
     setScraperApiHasValidKey(!!apiKey && apiKey.trim().length > 0);
+  };
+
+  const handleSpeedyIndexApiKeySet = (apiKey: string) => {
+    setSpeedyIndexHasValidKey(!!apiKey && apiKey.trim().length > 0);
   };
 
   return (
@@ -99,7 +109,7 @@ const Index = () => {
               </div>
             </TabsContent>
             <TabsContent value="index-checker">
-              <IndexCheckerTool projects={projects} />
+              <IndexCheckerTool projects={projects} onApiKeySet={handleSpeedyIndexApiKeySet} hasValidKey={speedyIndexHasValidKey} />
             </TabsContent>
           </Tabs>
         ) : (

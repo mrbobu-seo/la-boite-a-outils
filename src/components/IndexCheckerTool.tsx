@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SpeedyIndexApiKeyManager } from './SpeedyIndexApiKeyManager';
 import { Button } from '@/components/ui/button';
@@ -18,25 +18,16 @@ interface Project {
 
 interface IndexCheckerToolProps {
   projects: Project[];
+  onApiKeySet: (apiKey: string) => void;
+  hasValidKey: boolean;
 }
 
-const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects }) => {
-  const [speedyIndexHasValidApiKey, setSpeedyIndexHasValidApiKey] = useState(false);
+const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeySet, hasValidKey }) => {
   const [urls, setUrls] = useState('');
   const [taskType, setTaskType] = useState<'checker' | 'indexer'>('checker');
   const { results, isLoading, logs, createTask } = useIndexChecker();
   const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
   const [projectId, setProjectId] = useState<number | undefined>(undefined);
-
-
-  useEffect(() => {
-    const savedKey = localStorage.getItem('speedyindex_key');
-    setSpeedyIndexHasValidApiKey(!!savedKey && savedKey.trim().length > 0);
-  }, []);
-
-  const handleSpeedyIndexApiKeySet = (apiKey: string) => {
-    setSpeedyIndexHasValidApiKey(!!apiKey && apiKey.trim().length > 0);
-  };
 
   const handleCreateTask = () => {
     const urlArray = urls.split('\n').filter(url => url.trim() !== '');
@@ -105,10 +96,10 @@ const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects }) => {
   return (
     <div className="space-y-12">
       <SpeedyIndexApiKeyManager
-        onApiKeySet={handleSpeedyIndexApiKeySet}
-        hasValidKey={speedyIndexHasValidApiKey}
+        onApiKeySet={onApiKeySet}
+        hasValidKey={hasValidKey}
       />
-      {speedyIndexHasValidApiKey && (
+      {hasValidKey && (
         <>
           <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
             <CardHeader>
