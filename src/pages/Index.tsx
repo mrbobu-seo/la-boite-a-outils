@@ -67,6 +67,10 @@ const Index = () => {
     fetchProjects();
   }, [session]);
 
+  useEffect(() => {
+    console.log('scraperProjectId changed:', scraperProjectId);
+  }, [scraperProjectId]);
+
   const handleScraperApiKeySet = (apiKey: string) => {
     setScraperApiHasValidKey(!!apiKey && apiKey.trim().length > 0);
   };

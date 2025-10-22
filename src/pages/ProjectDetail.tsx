@@ -172,7 +172,7 @@ const ProjectDetail = () => {
                     <div key={result.id} className="bg-gray-50 p-4 rounded-lg">
                       <div className="flex justify-between items-center">
                         <h2 className="text-xl font-semibold text-gray-900">{result.query}</h2>
-                        <Button onClick={() => downloadJSON(result.data, result.query)} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+                        <Button onClick={() => downloadJSON(result.data, result.query)} size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
                           Télécharger
                         </Button>
                       </div>
@@ -198,7 +198,7 @@ const ProjectDetail = () => {
                       <div className="flex justify-between items-center">
                         <h2 className="text-xl font-semibold text-gray-900">Tâche: {task.task_id}</h2>
                         {task.type === 'checker' && (
-                          <Button onClick={() => handleGetReport(task.task_id)} disabled={isFetchingReport} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+                          <Button onClick={() => handleGetReport(task.task_id)} disabled={isFetchingReport} size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
                             {isFetchingReport ? 'Chargement...' : 'Voir le rapport'}
                           </Button>
                         )}
