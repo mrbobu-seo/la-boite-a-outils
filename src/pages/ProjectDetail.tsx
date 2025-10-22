@@ -92,7 +92,9 @@ const ProjectDetail = () => {
 
         const { data: speedyIndexData, error: speedyIndexError } = await supabase
           .from('speedy_index_tasks')
-          .select('*');
+          .select('*')
+          .eq('project_id', id)
+          .order('created_at', { ascending: false });
 
         if (speedyIndexError) {
           console.error('Error fetching speedy index tasks:', speedyIndexError);
