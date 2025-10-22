@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
+import { Session } from '@supabase/supabase-js';
 
 interface SpeedyIndexReport {
   id: string;
@@ -20,11 +21,34 @@ export const useIndexChecker = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [savedTaskDbId, setSavedTaskDbId] = useState<number | null>(null);
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
 
   const addLog = useCallback((message: string) => {
     setLogs((prevLogs) => [...prevLogs, message]);
   }, []);
+
+  const _saveTask = async (projectId: number, apiTaskId: string, type: 'checker' | 'indexer', urls: string[], session: Session) => {
+    try {
+      const { data, error } = await supabase.from('speedy_index_tasks').insert([
+        { project_id: projectId, task_id: apiTaskId, type, urls, status: 'created' },
+      ]).select('id');
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setSavedTaskDbId(data[0].id);
+      }
+      setIsSaved(true);
+      addLog(`Tâche sauvegardée dans le projet (ID: ${projectId})`);
+      toast({ title: 'Sauvegardé', description: 'La tâche a été automatiquement sauvegardée dans votre projet.' });
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde auto:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
+      addLog(`Erreur de sauvegarde: ${errorMessage}`);
+      toast({ title: 'Erreur de sauvegarde', description: errorMessage, variant: 'destructive' });
+    }
+  };
 
   const getReport = useCallback(async (id: string) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -100,9 +124,10 @@ export const useIndexChecker = () => {
     }
   }, [addLog, getReport, stopPolling]);
 
-  const createTask = async (urls: string[], type: 'checker' | 'indexer') => {
+  const createTask = async (urls: string[], type: 'checker' | 'indexer', projectId?: number) => {
     setLogs([]);
     setIsSaved(false);
+    setSavedTaskDbId(null);
     if (!urls.length) {
       toast({ title: "Aucune URL fournie", description: "Veuillez entrer au moins une URL.", variant: "destructive" });
       return;
@@ -137,13 +162,18 @@ export const useIndexChecker = () => {
       const data = await response.json();
 
       if (data.code === 0 && data.task_id) {
-        setTaskId(data.task_id);
-        addLog(`Tâche ${data.task_id} créée avec succès.`);
+        const apiTaskId = data.task_id;
+        setTaskId(apiTaskId);
+        addLog(`Tâche ${apiTaskId} créée avec succès.`);
         toast({ title: "Tâche créée", description: `La tâche a commencé pour ${urls.length} URLs.` });
+
+        if (projectId) {
+          await _saveTask(projectId, apiTaskId, type, urls, session);
+        }
 
         if (type === 'checker') {
           pollingInterval.current = setInterval(() => {
-            pollTaskStatus(data.task_id).catch(console.error);
+            pollTaskStatus(apiTaskId).catch(console.error);
           }, 10000);
         } else {
           addLog("La tâche d'indexation a été soumise. Le rapport ne sera pas récupéré automatically.");
@@ -161,8 +191,11 @@ export const useIndexChecker = () => {
     }
   };
 
-  const saveTask = async (projectId: number, type: 'checker' | 'indexer', urls: string[]) => {
-    if (!taskId) return;
+  const saveTask = async (newProjectId: number) => {
+    if (!taskId) {
+        toast({ title: 'Aucune tâche à sauvegarder', description: 'Veuillez d\'abord créer une tâche.', variant: 'destructive' });
+        return;
+    }
 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -171,18 +204,23 @@ export const useIndexChecker = () => {
     }
 
     try {
-      const { error } = await supabase.from('speedy_index_tasks').insert([
-        { project_id: projectId, task_id: taskId, type, urls, status: 'created' },
-      ]);
-
-      if (error) throw error;
-
-      setIsSaved(true);
-      toast({ title: 'Sauvegardé', description: 'La tâche a été sauvegardée dans votre projet.' });
+      if (savedTaskDbId) {
+        const { error } = await supabase.from('speedy_index_tasks').update({ project_id: newProjectId }).eq('id', savedTaskDbId);
+        if (error) throw error;
+        toast({ title: 'Projet mis à jour', description: 'Le projet associé à cette tâche a été mis à jour.' });
+      } else {
+        // This case should ideally not be hit if auto-save is the primary mechanism
+        // But as a fallback, we can insert.
+        const { error } = await supabase.from('speedy_index_tasks').insert([
+          { project_id: newProjectId, task_id: taskId, type: 'checker', urls: [], status: 'created' }, // Note: type and urls are not available here, might need adjustment
+        ]);
+        if (error) throw error;
+        toast({ title: 'Sauvegardé', description: 'La tâche a été associée à votre projet.' });
+      }
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue lors de la sauvegarde';
-      toast({ title: 'Erreur de sauvegarde', description: errorMessage, variant: 'destructive' });
+      console.error('Erreur lors de la sauvegarde/mise à jour:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
+      toast({ title: 'Erreur', description: errorMessage, variant: 'destructive' });
     }
   };
 

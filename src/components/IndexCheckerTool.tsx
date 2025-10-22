@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Folder, PlusCircle } from 'lucide-react';
+import { Folder, PlusCircle, Save } from 'lucide-react';
 import { CreateProjectModal } from './CreateProjectModal';
 
 interface Project {
@@ -27,18 +27,19 @@ interface IndexCheckerToolProps {
 const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeySet, hasValidKey, onProjectCreated }) => {
   const [urls, setUrls] = useState('');
   const [taskType, setTaskType] = useState<'checker' | 'indexer'>('checker');
-  const { results, isLoading, logs, createTask, isSaved, saveTask, taskId } = useIndexChecker();
+  const { results, isLoading, logs, createTask, saveTask, taskId } = useIndexChecker();
   const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
   const [projectId, setProjectId] = useState<number | undefined>(undefined);
   const [isCreateProjectModalOpen, setCreateProjectModalOpen] = useState(false);
 
   const handleCreateTask = () => {
     const urlArray = urls.split('\n').filter(url => url.trim() !== '');
-    createTask(urlArray, taskType);
+    createTask(urlArray, taskType, projectId);
   };
   
   const handleIndexSelectedUrls = () => {
-    createTask(selectedUrls, 'indexer');
+    // Pass projectId to allow auto-saving for this sub-task as well
+    createTask(selectedUrls, 'indexer', projectId);
     setSelectedUrls([]);
   };
 
@@ -47,13 +48,6 @@ const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeyS
       setSelectedUrls(prev => [...prev, url]);
     } else {
       setSelectedUrls(prev => prev.filter(u => u !== url));
-    }
-  };
-
-  const handleSaveTask = () => {
-    if (projectId) {
-      const urlArray = urls.split('\n').filter(url => url.trim() !== '');
-      saveTask(projectId, taskType, urlArray);
     }
   };
 
@@ -143,30 +137,40 @@ const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeyS
                     rows={10}
                   />
                   <div className="space-y-2">
-                    <Label htmlFor="project" className="flex items-center gap-2">
+                    <Label htmlFor="project-indexer" className="flex items-center gap-2">
                       <Folder className="h-4 w-4" />
-                      Projet (Optionnel)
+                      Projet
                     </Label>
-                    <Select
-                      value={projectId ? String(projectId) : "no-project"}
-                      onValueChange={handleProjectChange}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Aucun projet" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="no-project">Aucun projet</SelectItem>
-                        {projects.map(project => (
-                          <SelectItem key={project.id} value={String(project.id)}>{project.name}</SelectItem>
-                        ))}
-                        <SelectItem value="create-new-project">
-                          <div className="flex items-center gap-2">
-                            <PlusCircle className="h-4 w-4" />
-                            Créer un nouveau projet
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={projectId ? String(projectId) : "no-project"}
+                        onValueChange={handleProjectChange}
+                      >
+                        <SelectTrigger className="w-full" id="project-indexer">
+                          <SelectValue placeholder="Aucun projet" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="no-project">Aucun projet (sauvegarde manuelle)</SelectItem>
+                          {projects.map(project => (
+                            <SelectItem key={project.id} value={String(project.id)}>{project.name}</SelectItem>
+                          ))}
+                          <SelectItem value="create-new-project">
+                            <div className="flex items-center gap-2">
+                              <PlusCircle className="h-4 w-4" />
+                              Créer un nouveau projet
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        onClick={() => saveTask(projectId!)}
+                        disabled={!projectId || isLoading || !taskId}
+                        title="Sauvegarder ou mettre à jour le projet pour la tâche affichée"
+                      >
+                        <Save className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                   <Button
                     onClick={handleCreateTask}
@@ -175,11 +179,6 @@ const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeyS
                   >
                     {isLoading ? 'Tâche en cours...' : `Lancer ${taskType === 'checker' ? 'la vérification' : 'l\'indexation'}`}
                   </Button>
-                  {taskId && projectId && !isSaved && (
-                    <Button onClick={handleSaveTask} className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white">
-                      Sauvegarder la tâche dans le projet
-                    </Button>
-                  )}
                 </div>
               </CardContent>
             </Card>
