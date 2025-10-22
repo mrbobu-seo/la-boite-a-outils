@@ -82,7 +82,7 @@ const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeyS
                       onCheckedChange={(checked) => handleUrlSelection(link.url, !!checked)}
                       checked={selectedUrls.includes(link.url)}
                     />
-                    <label htmlFor={link.url}>{link.url} (Error: {link.error_code})</label>
+                    <label htmlFor={link.url}>{link.url} (Error: {typeof link.error_code === 'number' ? link.error_code : 'N/A'})</label>
                   </li>
                 ))}
               </ul>

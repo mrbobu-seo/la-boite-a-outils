@@ -30,7 +30,7 @@ const SpeedyIndexTaskResult: React.FC<SpeedyIndexTaskResultProps> = ({ report })
             <h3 className="font-bold">URLs Non Indexées ({report.unindexed_links.length})</h3>
             <ul className="list-disc list-inside">
               {report.unindexed_links.map((link: { url: string; error_code: number; }) => (
-                <li key={link.url}>{link.url} (Error: {link.error_code})</li>
+                <li key={link.url}>{link.url} (Error: {typeof link.error_code === 'number' ? link.error_code : 'N/A'})</li>
               ))}
             </ul>
           </div>
