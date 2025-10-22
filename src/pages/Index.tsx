@@ -7,6 +7,7 @@ import { ScraperApiKeyManager } from '@/components/ScraperApiKeyManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import ScraperLogsDisplay from '@/components/ScraperLogsDisplay';
+import { Button } from '@/components/ui/button';
 
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabaseClient';
@@ -19,9 +20,10 @@ interface Project {
 const Index = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const { results, isLoading, search, logs } = useScraper();
+  const { results, isLoading, search, logs, isSaved, saveResults } = useScraper();
   const [scraperApiHasValidKey, setScraperApiHasValidKey] = useState(false);
   const [speedyIndexHasValidKey, setSpeedyIndexHasValidKey] = useState(false);
+  const [scraperProjectId, setScraperProjectId] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -73,6 +75,11 @@ const Index = () => {
     setSpeedyIndexHasValidKey(!!apiKey && apiKey.trim().length > 0);
   };
 
+  const handleProjectCreated = (newProject: Project) => {
+    setProjects(prevProjects => [newProject, ...prevProjects]);
+    setScraperProjectId(newProject.id);
+  };
+
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-12 text-center">
@@ -95,10 +102,15 @@ const Index = () => {
             <TabsContent value="scraper">
               <div className="space-y-12">
                 <ScraperApiKeyManager onApiKeySet={handleScraperApiKeySet} hasValidKey={scraperApiHasValidKey} />
-                {scraperApiHasValidKey && <SearchForm onSearch={search} isLoading={isLoading} projects={projects} />}
+                {scraperApiHasValidKey && <SearchForm onSearch={search} isLoading={isLoading} projects={projects} projectId={scraperProjectId} onProjectIdChange={setScraperProjectId} onProjectCreated={handleProjectCreated} />}
                 {results && (
                   <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
                     <ResultsDisplay results={results} />
+                    {scraperProjectId && !isSaved && (
+                      <Button onClick={() => saveResults(scraperProjectId)} className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white">
+                        Sauvegarder les résultats dans le projet
+                      </Button>
+                    )}
                   </Card>
                 )}
                 {logs.length > 0 && (
@@ -109,7 +121,7 @@ const Index = () => {
               </div>
             </TabsContent>
             <TabsContent value="index-checker">
-              <IndexCheckerTool projects={projects} onApiKeySet={handleSpeedyIndexApiKeySet} hasValidKey={speedyIndexHasValidKey} />
+              <IndexCheckerTool projects={projects} onApiKeySet={handleSpeedyIndexApiKeySet} hasValidKey={speedyIndexHasValidKey} onProjectCreated={handleProjectCreated} />
             </TabsContent>
           </Tabs>
         ) : (

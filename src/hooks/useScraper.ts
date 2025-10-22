@@ -9,13 +9,15 @@ export const useScraper = () => {
   const [results, setResults] = useState<ScrapingResults | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
+  const [isSaved, setIsSaved] = useState(false);
 
   const addLog = (message: string) => {
     setLogs((prevLogs) => [...prevLogs, message]);
   };
 
-  const search = async (params: SearchParams & { projectId?: number }) => {
+  const search = async (params: SearchParams) => {
     setLogs([]); // Clear logs at the start of a new search
+    setIsSaved(false);
 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -72,5 +74,38 @@ export const useScraper = () => {
     }
   };
 
-  return { results, isLoading, search, logs };
+  const saveResults = async (projectId: number) => {
+    if (!results) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({ title: 'Non connecté', description: 'Veuillez vous connecter pour sauvegarder.', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('scraper_results').insert([
+        {
+          project_id: projectId,
+          user_id: session.user.id,
+          data: results,
+          query: results.search_information.query_displayed,
+          country_code: results.search_parameters.country,
+          tld: results.search_parameters.google_domain,
+          language: results.search_parameters.hl,
+        },
+      ]);
+
+      if (error) throw error;
+
+      setIsSaved(true);
+      toast({ title: 'Sauvegardé', description: 'Les résultats ont été sauvegardés dans votre projet.' });
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue lors de la sauvegarde';
+      toast({ title: 'Erreur de sauvegarde', description: errorMessage, variant: 'destructive' });
+    }
+  };
+
+  return { results, isLoading, search, logs, isSaved, saveResults };
 };

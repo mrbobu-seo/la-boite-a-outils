@@ -159,7 +159,7 @@ const ProjectDetail = () => {
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-12">
         <div className="bg-white p-8 rounded-lg shadow-md w-full">
-          <h1 className="text-3xl font-bold mb-6 text-gray-800 gradient-text">{project.name}</h1>
+          <h1 className="text-5xl font-bold mb-4 text-indigo-600">{project.name}</h1>
           <Tabs defaultValue="scraper" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="scraper">Scraper SERP</TabsTrigger>
@@ -172,7 +172,7 @@ const ProjectDetail = () => {
                     <div key={result.id} className="bg-gray-50 p-4 rounded-lg">
                       <div className="flex justify-between items-center">
                         <h2 className="text-xl font-semibold text-gray-900">{result.query}</h2>
-                        <Button onClick={() => downloadJSON(result.data, result.query)} size="sm">
+                        <Button onClick={() => downloadJSON(result.data, result.query)} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
                           Télécharger
                         </Button>
                       </div>
@@ -198,7 +198,7 @@ const ProjectDetail = () => {
                       <div className="flex justify-between items-center">
                         <h2 className="text-xl font-semibold text-gray-900">Tâche: {task.task_id}</h2>
                         {task.type === 'checker' && (
-                          <Button onClick={() => handleGetReport(task.task_id)} disabled={isFetchingReport} size="sm">
+                          <Button onClick={() => handleGetReport(task.task_id)} disabled={isFetchingReport} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
                             {isFetchingReport ? 'Chargement...' : 'Voir le rapport'}
                           </Button>
                         )}

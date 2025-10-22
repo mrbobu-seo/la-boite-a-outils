@@ -9,7 +9,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Folder } from 'lucide-react';
+import { Folder, PlusCircle } from 'lucide-react';
+import { CreateProjectModal } from './CreateProjectModal';
 
 interface Project {
   id: number;
@@ -20,22 +21,24 @@ interface IndexCheckerToolProps {
   projects: Project[];
   onApiKeySet: (apiKey: string) => void;
   hasValidKey: boolean;
+  onProjectCreated: (project: Project) => void;
 }
 
-const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeySet, hasValidKey }) => {
+const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeySet, hasValidKey, onProjectCreated }) => {
   const [urls, setUrls] = useState('');
   const [taskType, setTaskType] = useState<'checker' | 'indexer'>('checker');
-  const { results, isLoading, logs, createTask } = useIndexChecker();
+  const { results, isLoading, logs, createTask, isSaved, saveTask, taskId } = useIndexChecker();
   const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
   const [projectId, setProjectId] = useState<number | undefined>(undefined);
+  const [isCreateProjectModalOpen, setCreateProjectModalOpen] = useState(false);
 
   const handleCreateTask = () => {
     const urlArray = urls.split('\n').filter(url => url.trim() !== '');
-    createTask(urlArray, taskType, projectId);
+    createTask(urlArray, taskType);
   };
   
   const handleIndexSelectedUrls = () => {
-    createTask(selectedUrls, 'indexer', projectId);
+    createTask(selectedUrls, 'indexer');
     setSelectedUrls([]);
   };
 
@@ -44,6 +47,21 @@ const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeyS
       setSelectedUrls(prev => [...prev, url]);
     } else {
       setSelectedUrls(prev => prev.filter(u => u !== url));
+    }
+  };
+
+  const handleSaveTask = () => {
+    if (projectId) {
+      const urlArray = urls.split('\n').filter(url => url.trim() !== '');
+      saveTask(projectId, taskType, urlArray);
+    }
+  };
+
+  const handleProjectChange = (value: string) => {
+    if (value === 'create-new-project') {
+      setCreateProjectModalOpen(true);
+    } else {
+      setProjectId(value === "no-project" ? undefined : parseInt(value));
     }
   };
 
@@ -94,76 +112,94 @@ const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeyS
   };
 
   return (
-    <div className="space-y-12">
-      <SpeedyIndexApiKeyManager
-        onApiKeySet={onApiKeySet}
-        hasValidKey={hasValidKey}
-      />
-      {hasValidKey && (
-        <>
-          <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-indigo-600">Index Checker & Indexation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <RadioGroup defaultValue="checker" onValueChange={(value: 'checker' | 'indexer') => setTaskType(value)} className="flex space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="checker" id="checker" />
-                    <Label htmlFor="checker">Vérifier l'indexation</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="indexer" id="indexer" />
-                    <Label htmlFor="indexer">Indexer les URLs</Label>
-                  </div>
-                </RadioGroup>
-                <Textarea
-                  value={urls}
-                  onChange={(e) => setUrls(e.target.value)}
-                  placeholder="Entrez une URL par ligne"
-                  rows={10}
-                />
-                <div className="space-y-2">
-                  <Label htmlFor="project" className="flex items-center gap-2">
-                    <Folder className="h-4 w-4" />
-                    Projet (Optionnel)
-                  </Label>
-                  <Select
-                    value={projectId ? String(projectId) : "no-project"}
-                    onValueChange={(value) => setProjectId(value === "no-project" ? undefined : parseInt(value))}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Aucun projet" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="no-project">Aucun projet</SelectItem>
-                      {projects.map(project => (
-                        <SelectItem key={project.id} value={String(project.id)}>{project.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  onClick={handleCreateTask}
-                  disabled={isLoading}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-                >
-                  {isLoading ? 'Tâche en cours...' : `Lancer ${taskType === 'checker' ? 'la vérification' : 'l\'indexation'}`}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          {logs.length > 0 && (
+    <>
+      <div className="space-y-12">
+        <SpeedyIndexApiKeyManager
+          onApiKeySet={onApiKeySet}
+          hasValidKey={hasValidKey}
+        />
+        {hasValidKey && (
+          <>
             <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
-              <ScraperLogsDisplay logs={logs} />
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-indigo-600">Index Checker & Indexation</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <RadioGroup defaultValue="checker" onValueChange={(value: 'checker' | 'indexer') => setTaskType(value)} className="flex space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="checker" id="checker" />
+                      <Label htmlFor="checker">Vérifier l'indexation</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="indexer" id="indexer" />
+                      <Label htmlFor="indexer">Indexer les URLs</Label>
+                    </div>
+                  </RadioGroup>
+                  <Textarea
+                    value={urls}
+                    onChange={(e) => setUrls(e.target.value)}
+                    placeholder="Entrez une URL par ligne"
+                    rows={10}
+                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="project" className="flex items-center gap-2">
+                      <Folder className="h-4 w-4" />
+                      Projet (Optionnel)
+                    </Label>
+                    <Select
+                      value={projectId ? String(projectId) : "no-project"}
+                      onValueChange={handleProjectChange}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Aucun projet" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="no-project">Aucun projet</SelectItem>
+                        {projects.map(project => (
+                          <SelectItem key={project.id} value={String(project.id)}>{project.name}</SelectItem>
+                        ))}
+                        <SelectItem value="create-new-project">
+                          <div className="flex items-center gap-2">
+                            <PlusCircle className="h-4 w-4" />
+                            Créer un nouveau projet
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    onClick={handleCreateTask}
+                    disabled={isLoading}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    {isLoading ? 'Tâche en cours...' : `Lancer ${taskType === 'checker' ? 'la vérification' : 'l\'indexation'}`}
+                  </Button>
+                  {taskId && projectId && !isSaved && (
+                    <Button onClick={handleSaveTask} className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white">
+                      Sauvegarder la tâche dans le projet
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
             </Card>
-          )}
-          <div className="mt-8">
-            {renderResults()}
-          </div>
-        </>
-      )}
-    </div>
+            {logs.length > 0 && (
+              <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
+                <ScraperLogsDisplay logs={logs} />
+              </Card>
+            )}
+            <div className="mt-8">
+              {renderResults()}
+            </div>
+          </>
+        )}
+      </div>
+      <CreateProjectModal
+        isOpen={isCreateProjectModalOpen}
+        onClose={() => setCreateProjectModalOpen(false)}
+        onProjectCreated={onProjectCreated}
+      />
+    </>
   );
 };
 

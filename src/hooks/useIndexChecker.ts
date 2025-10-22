@@ -19,6 +19,7 @@ export const useIndexChecker = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [taskId, setTaskId] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
 
   const addLog = useCallback((message: string) => {
@@ -99,8 +100,9 @@ export const useIndexChecker = () => {
     }
   }, [addLog, getReport, stopPolling]);
 
-  const createTask = async (urls: string[], type: 'checker' | 'indexer', projectId?: number) => {
+  const createTask = async (urls: string[], type: 'checker' | 'indexer') => {
     setLogs([]);
+    setIsSaved(false);
     if (!urls.length) {
       toast({ title: "Aucune URL fournie", description: "Veuillez entrer au moins une URL.", variant: "destructive" });
       return;
@@ -139,21 +141,12 @@ export const useIndexChecker = () => {
         addLog(`Tâche ${data.task_id} créée avec succès.`);
         toast({ title: "Tâche créée", description: `La tâche a commencé pour ${urls.length} URLs.` });
 
-        if (projectId) {
-          const { error } = await supabase.from('speedy_index_tasks').insert([
-            { project_id: projectId, task_id: data.task_id, type, urls, status: 'created' },
-          ]);
-          if (error) {
-            addLog(`Erreur lors de l'enregistrement de la tâche dans le projet: ${error.message}`);
-          }
-        }
-
         if (type === 'checker') {
           pollingInterval.current = setInterval(() => {
             pollTaskStatus(data.task_id).catch(console.error);
           }, 10000);
         } else {
-          addLog("La tâche d'indexation a été soumise. Le rapport ne sera pas récupéré automatiquement.");
+          addLog("La tâche d'indexation a été soumise. Le rapport ne sera pas récupéré automatically.");
           setIsLoading(false);
         }
       } else {
@@ -168,5 +161,30 @@ export const useIndexChecker = () => {
     }
   };
 
-  return { results, isLoading, logs, createTask };
+  const saveTask = async (projectId: number, type: 'checker' | 'indexer', urls: string[]) => {
+    if (!taskId) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({ title: 'Non connecté', description: 'Veuillez vous connecter pour sauvegarder.', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('speedy_index_tasks').insert([
+        { project_id: projectId, task_id: taskId, type, urls, status: 'created' },
+      ]);
+
+      if (error) throw error;
+
+      setIsSaved(true);
+      toast({ title: 'Sauvegardé', description: 'La tâche a été sauvegardée dans votre projet.' });
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue lors de la sauvegarde';
+      toast({ title: 'Erreur de sauvegarde', description: errorMessage, variant: 'destructive' });
+    }
+  };
+
+  return { results, isLoading, logs, createTask, isSaved, saveTask, taskId };
 };
