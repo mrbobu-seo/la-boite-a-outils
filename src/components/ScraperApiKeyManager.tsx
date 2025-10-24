@@ -37,7 +37,7 @@ export const ScraperApiKeyManager = ({ onApiKeySet, hasValidKey }: ScraperApiKey
         return;
       }
 
-      const response = await fetch(`/api/scraperapi-proxy?url=http://api.scraperapi.com/account&_=${new Date().getTime()}`, {
+            const response = await fetch(`/api/scraperapi-proxy?url=http://httpbin.org/get&_=${new Date().getTime()}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'X-ScraperAPI-Key-To-Test': keyToTest,

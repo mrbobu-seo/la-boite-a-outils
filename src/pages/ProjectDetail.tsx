@@ -50,6 +50,7 @@ const ProjectDetail = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [selectedTaskReport, setSelectedTaskReport] = useState<SpeedyIndexReport | null>(null);
   const [isFetchingReport, setIsFetchingReport] = useState(false);
+  const [activeReportTaskId, setActiveReportTaskId] = useState<string | null>(null);
 
   useEffect(() => {
     const getSession = async () => {
@@ -112,6 +113,7 @@ const ProjectDetail = () => {
 
   const handleGetReport = async (taskId: string) => {
     if (!session) return;
+    setActiveReportTaskId(taskId);
     setIsFetchingReport(true);
     setSelectedTaskReport(null);
     try {
@@ -198,8 +200,8 @@ const ProjectDetail = () => {
                       <div className="flex justify-between items-center">
                         <h2 className="text-xl font-semibold text-gray-900">Tâche: {task.task_id}</h2>
                         {task.type === 'checker' && (
-                          <Button onClick={() => handleGetReport(task.task_id)} disabled={isFetchingReport} size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                            {isFetchingReport ? 'Chargement...' : 'Voir le rapport'}
+                          <Button onClick={() => handleGetReport(task.task_id)} disabled={isFetchingReport && activeReportTaskId === task.task_id} size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                            {isFetchingReport && activeReportTaskId === task.task_id ? 'Chargement...' : 'Voir le rapport'}
                           </Button>
                         )}
                       </div>
@@ -211,15 +213,15 @@ const ProjectDetail = () => {
                           {task.urls.map(url => <li key={url}>{url}</li>)}
                         </ul>
                       </details>
+                      {activeReportTaskId === task.task_id && selectedTaskReport && (
+                        <div className="mt-4">
+                          <SpeedyIndexTaskResult report={selectedTaskReport} />
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
                   <p>Aucune tâche de SpeedyIndex pour ce projet.</p>
-                )}
-                {selectedTaskReport && (
-                  <div className="mt-4">
-                    <SpeedyIndexTaskResult report={selectedTaskReport} />
-                  </div>
                 )}
               </div>
             </TabsContent>
