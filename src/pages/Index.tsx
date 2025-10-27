@@ -99,9 +99,10 @@ const Index = () => {
       <main className="container mx-auto px-4 py-12">
         {session ? (
           <Tabs defaultValue="scraper" className="w-full max-w-6xl mx-auto">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="scraper">Scraper SERP</TabsTrigger>
               <TabsTrigger value="index-checker">Index Checker & Indexation</TabsTrigger>
+              <TabsTrigger value="content-briefs">Briefs de contenu</TabsTrigger>
             </TabsList>
             <TabsContent value="scraper">
               <div className="space-y-12">
@@ -121,6 +122,9 @@ const Index = () => {
             </TabsContent>
             <TabsContent value="index-checker">
               <IndexCheckerTool projects={projects} onApiKeySet={handleSpeedyIndexApiKeySet} hasValidKey={speedyIndexHasValidKey} onProjectCreated={handleProjectCreated} />
+            </TabsContent>
+            <TabsContent value="content-briefs">
+              <p>Built en cours</p>
             </TabsContent>
           </Tabs>
         ) : (
