@@ -23,6 +23,7 @@ const Index = () => {
   const { results, isLoading, search, logs, isSaved, saveResults } = useScraper();
   const [scraperApiHasValidKey, setScraperApiHasValidKey] = useState(false);
   const [speedyIndexHasValidKey, setSpeedyIndexHasValidKey] = useState(false);
+  const [ralfyIndexHasValidKey, setRalfyIndexHasValidKey] = useState(false);
   const [scraperProjectId, setScraperProjectId] = useState<number | undefined>(undefined);
 
   useEffect(() => {
@@ -42,6 +43,11 @@ const Index = () => {
     const savedSpeedyIndexKey = localStorage.getItem('speedyindex_key');
     if (savedSpeedyIndexKey) {
       setSpeedyIndexHasValidKey(true);
+    }
+
+    const savedRalfyIndexKey = localStorage.getItem('ralfyindex_key');
+    if (savedRalfyIndexKey) {
+      setRalfyIndexHasValidKey(true);
     }
 
     return () => subscription.unsubscribe();
@@ -77,6 +83,10 @@ const Index = () => {
 
   const handleSpeedyIndexApiKeySet = (apiKey: string) => {
     setSpeedyIndexHasValidKey(!!apiKey && apiKey.trim().length > 0);
+  };
+
+  const handleRalfyIndexApiKeySet = (apiKey: string) => {
+    setRalfyIndexHasValidKey(!!apiKey && apiKey.trim().length > 0);
   };
 
   const handleProjectCreated = (newProject: Project) => {
@@ -121,7 +131,14 @@ const Index = () => {
               </div>
             </TabsContent>
             <TabsContent value="index-checker">
-              <IndexCheckerTool projects={projects} onApiKeySet={handleSpeedyIndexApiKeySet} hasValidKey={speedyIndexHasValidKey} onProjectCreated={handleProjectCreated} />
+              <IndexCheckerTool
+                projects={projects}
+                onSpeedyIndexApiKeySet={handleSpeedyIndexApiKeySet}
+                hasSpeedyIndexValidKey={speedyIndexHasValidKey}
+                onRalfyIndexApiKeySet={handleRalfyIndexApiKeySet}
+                hasRalfyIndexValidKey={ralfyIndexHasValidKey}
+                onProjectCreated={handleProjectCreated}
+              />
             </TabsContent>
             <TabsContent value="content-briefs">
               <p>Built en cours</p>

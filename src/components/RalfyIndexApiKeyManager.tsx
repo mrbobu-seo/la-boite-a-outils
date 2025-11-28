@@ -1,0 +1,190 @@
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/components/ui/use-toast';
+import { Key, AlertTriangle, CheckCircle } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
+
+interface RalfyIndexApiKeyManagerProps {
+    onApiKeySet: (apiKey: string) => void;
+    hasValidKey: boolean;
+}
+
+export const RalfyIndexApiKeyManager = ({ onApiKeySet, hasValidKey }: RalfyIndexApiKeyManagerProps) => {
+    const [apiKey, setApiKey] = useState('');
+    const [isTestingKey, setIsTestingKey] = useState(false);
+    const [showKeyInput, setShowKeyInput] = useState(!hasValidKey);
+    const { toast } = useToast();
+
+    useEffect(() => {
+        const savedKey = localStorage.getItem('ralfyindex_key');
+        if (savedKey) {
+            setApiKey(savedKey);
+            onApiKeySet(savedKey);
+        }
+    }, [onApiKeySet]);
+
+    const testApiKey = async (keyToTest: string) => {
+        setIsTestingKey(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                toast({ title: "Non connecté", description: "Veuillez vous connecter.", variant: "destructive" });
+                setIsTestingKey(false);
+                return;
+            }
+
+            const response = await fetch(`/api/ralfyindex-proxy/status`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                    'X-RalfyIndex-Key-To-Test': keyToTest,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.status === 'ok') {
+                    localStorage.setItem('ralfyindex_key', keyToTest);
+                    onApiKeySet(keyToTest);
+                    setShowKeyInput(false);
+                    toast({
+                        title: "Clé API RalfyIndex validée",
+                        description: "Votre clé API est valide et prête à utiliser.",
+                    });
+
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) {
+                        await supabase.from('api_keys').upsert(
+                            { user_id: user.id, service_name: 'RalfyIndex', api_key: keyToTest },
+                            { onConflict: 'user_id, service_name' }
+                        );
+                    }
+
+                    return true;
+                } else {
+                    throw new Error(data.message || 'Invalid response from RalfyIndex API.');
+                }
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP ${response.status}`);
+            }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue lors de la validation.';
+            toast({
+                title: "Erreur de validation RalfyIndex",
+                description: `Clé API invalide ou problème de connexion: ${errorMessage}`,
+                variant: "destructive",
+            });
+            return false;
+        } finally {
+            setIsTestingKey(false);
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!apiKey.trim()) return;
+        await testApiKey(apiKey.trim());
+    };
+
+    const handleRemoveKey = () => {
+        localStorage.removeItem('ralfyindex_key');
+        setApiKey('');
+        onApiKeySet('');
+        setShowKeyInput(true);
+        toast({
+            title: "Clé API RalfyIndex supprimée",
+            description: "Vous devez configurer une nouvelle clé API RalfyIndex.",
+        });
+    };
+
+    if (hasValidKey && !showKeyInput) {
+        return (
+            <Card className="bg-gray-50 p-6 rounded-lg shadow-md">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <div>
+                            <h3 className="font-semibold">Clé API RalfyIndex configurée</h3>
+                            <p className="text-sm text-muted-foreground">RalfyIndex est prêt à utiliser</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setShowKeyInput(true)}>
+                            Changer
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={handleRemoveKey}>
+                            Supprimer
+                        </Button>
+                    </div>
+                </div>
+            </Card>
+        );
+    }
+
+    return (
+        <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
+            <div className="flex items-center gap-3 mb-4">
+                <Key className="h-6 w-6 text-indigo-600" />
+                <h2 className="text-2xl font-bold text-indigo-600">Configuration API RalfyIndex</h2>
+            </div>
+
+            <Alert className="mb-6 border-indigo-500/20 bg-indigo-500/10">
+                <AlertTriangle className="h-4 w-4 text-indigo-500" />
+                <AlertDescription className="text-indigo-700">
+                    <strong>Proxy Serverless :</strong> Cette application utilise un proxy serverless pour communiquer avec RalfyIndex API.
+                    Votre clé API est sécurisée et n'est pas exposée côté client.
+                </AlertDescription>
+            </Alert>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="apiKey">Clé API RalfyIndex</Label>
+                    <Input
+                        id="apiKey"
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder="Entrez votre clé API RalfyIndex"
+                        required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Obtenez votre clé sur{' '}
+                        <a
+                            href="https://ralfyindex.com"
+                            className="text-indigo-600 hover:underline"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            ralfyindex.com
+                        </a>
+                    </p>
+                </div>
+
+                <Button
+                    type="submit"
+                    disabled={isTestingKey || !apiKey.trim()}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                    {isTestingKey ? (
+                        <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                            Test en cours...
+                        </>
+                    ) : (
+                        <>
+                            <Key className="h-4 w-4" />
+                            Valider et configurer
+                        </>
+                    )}
+                </Button>
+            </form>
+        </Card>
+    );
+};

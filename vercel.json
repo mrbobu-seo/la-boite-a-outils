@@ -13,6 +13,10 @@
       "destination": "/api/scraperapi-proxy"
     },
     {
+      "source": "/api/ralfyindex-proxy/(.*)",
+      "destination": "/api/ralfyindex-proxy"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

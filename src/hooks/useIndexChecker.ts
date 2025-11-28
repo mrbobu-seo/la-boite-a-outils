@@ -124,7 +124,7 @@ export const useIndexChecker = () => {
     }
   }, [addLog, getReport, stopPolling]);
 
-  const createTask = async (urls: string[], type: 'checker' | 'indexer', projectId?: number) => {
+  const createTask = async (urls: string[], type: 'checker' | 'indexer', projectId?: number, indexationMethod?: 'speedyindex' | 'ralfyindex') => {
     setLogs([]);
     setIsSaved(false);
     setSavedTaskDbId(null);
@@ -148,6 +148,41 @@ export const useIndexChecker = () => {
     }
 
     const endpoint = `/api/speedyindex-proxy/v2/task/google/${type}/create`;
+
+    // For RalfyIndex indexation
+    if (type === 'indexer' && indexationMethod === 'ralfyindex') {
+      try {
+        const response = await fetch('/api/ralfyindex-proxy/project', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            projectName: projectId ? `Project_${projectId}_${Date.now()}` : undefined,
+            urls
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'ok') {
+          addLog(`Indexation RalfyIndex réussie. ${data.creditsUsed} crédits utilisés.`);
+          toast({ title: "Indexation RalfyIndex terminée", description: `${urls.length} URLs soumises. ${data.creditsUsed} crédits utilisés.` });
+          setIsLoading(false);
+          return;
+        } else {
+          throw new Error(data.message || 'Failed to create RalfyIndex project.');
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue.';
+        addLog(`Erreur lors de l'indexation RalfyIndex: ${errorMessage}`);
+        toast({ title: "Erreur RalfyIndex", description: errorMessage, variant: "destructive" });
+        setIsLoading(false);
+        stopPolling();
+        return;
+      }
+    }
 
     try {
       const response = await fetch(endpoint, {
@@ -193,8 +228,8 @@ export const useIndexChecker = () => {
 
   const saveTask = async (newProjectId: number) => {
     if (!taskId) {
-        toast({ title: 'Aucune tâche à sauvegarder', description: 'Veuillez d\'abord créer une tâche.', variant: 'destructive' });
-        return;
+      toast({ title: 'Aucune tâche à sauvegarder', description: 'Veuillez d\'abord créer une tâche.', variant: 'destructive' });
+      return;
     }
 
     const { data: { session } } = await supabase.auth.getSession();

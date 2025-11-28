@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SpeedyIndexApiKeyManager } from './SpeedyIndexApiKeyManager';
+import { RalfyIndexApiKeyManager } from './RalfyIndexApiKeyManager';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useIndexChecker } from '@/hooks/useIndexChecker';
@@ -19,14 +20,17 @@ interface Project {
 
 interface IndexCheckerToolProps {
   projects: Project[];
-  onApiKeySet: (apiKey: string) => void;
-  hasValidKey: boolean;
+  onSpeedyIndexApiKeySet: (apiKey: string) => void;
+  hasSpeedyIndexValidKey: boolean;
+  onRalfyIndexApiKeySet: (apiKey: string) => void;
+  hasRalfyIndexValidKey: boolean;
   onProjectCreated: (project: Project) => void;
 }
 
-const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeySet, hasValidKey, onProjectCreated }) => {
+const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onSpeedyIndexApiKeySet, hasSpeedyIndexValidKey, onRalfyIndexApiKeySet, hasRalfyIndexValidKey, onProjectCreated }) => {
   const [urls, setUrls] = useState('');
   const [taskType, setTaskType] = useState<'checker' | 'indexer'>('checker');
+  const [indexationMethod, setIndexationMethod] = useState<'speedyindex' | 'ralfyindex'>('speedyindex');
   const { results, isLoading, logs, createTask, saveTask, taskId } = useIndexChecker();
   const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
   const [projectId, setProjectId] = useState<number | undefined>(undefined);
@@ -34,13 +38,20 @@ const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeyS
 
   const handleCreateTask = () => {
     const urlArray = urls.split('\n').filter(url => url.trim() !== '');
-    createTask(urlArray, taskType, projectId);
+    createTask(urlArray, taskType, projectId, taskType === 'indexer' ? indexationMethod : undefined);
   };
-  
+
   const handleIndexSelectedUrls = () => {
     // Pass projectId to allow auto-saving for this sub-task as well
-    createTask(selectedUrls, 'indexer', projectId);
+    createTask(selectedUrls, 'indexer', projectId, indexationMethod);
     setSelectedUrls([]);
+  };
+
+  const handleSelectAllUnindexed = () => {
+    if (results && results.unindexed_links) {
+      const allUnindexedUrls = results.unindexed_links.map((link: { url: string }) => link.url);
+      setSelectedUrls(allUnindexedUrls);
+    }
   };
 
   const handleUrlSelection = (url: string, checked: boolean) => {
@@ -80,11 +91,18 @@ const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeyS
             <div>
               <div className="flex items-center justify-between">
                 <h3 className="font-bold">URLs Non Indexées ({results.unindexed_links.length})</h3>
-                {selectedUrls.length > 0 && (
-                  <Button onClick={handleIndexSelectedUrls} size="sm">
-                    Indexer les URLs sélectionnées ({selectedUrls.length})
-                  </Button>
-                )}
+                <div className="flex gap-2">
+                  {results.unindexed_links.length > 0 && (
+                    <Button onClick={handleSelectAllUnindexed} size="sm" variant="outline">
+                      Tout sélectionner
+                    </Button>
+                  )}
+                  {selectedUrls.length > 0 && (
+                    <Button onClick={handleIndexSelectedUrls} size="sm">
+                      Indexer les URLs sélectionnées ({selectedUrls.length})
+                    </Button>
+                  )}
+                </div>
               </div>
               <ul className="list-disc list-inside">
                 {results.unindexed_links.map((link: { url: string; error_code: number; }) => (
@@ -109,10 +127,14 @@ const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeyS
     <>
       <div className="space-y-12">
         <SpeedyIndexApiKeyManager
-          onApiKeySet={onApiKeySet}
-          hasValidKey={hasValidKey}
+          onApiKeySet={onSpeedyIndexApiKeySet}
+          hasValidKey={hasSpeedyIndexValidKey}
         />
-        {hasValidKey && (
+        <RalfyIndexApiKeyManager
+          onApiKeySet={onRalfyIndexApiKeySet}
+          hasValidKey={hasRalfyIndexValidKey}
+        />
+        {(hasSpeedyIndexValidKey || hasRalfyIndexValidKey) && (
           <>
             <Card className="bg-gray-50 p-8 rounded-lg shadow-md">
               <CardHeader>
@@ -130,6 +152,21 @@ const IndexCheckerTool: React.FC<IndexCheckerToolProps> = ({ projects, onApiKeyS
                       <Label htmlFor="indexer">Indexer les URLs</Label>
                     </div>
                   </RadioGroup>
+                  {taskType === 'indexer' && (
+                    <div className="space-y-2">
+                      <Label>Méthode d'indexation</Label>
+                      <RadioGroup value={indexationMethod} onValueChange={(value: 'speedyindex' | 'ralfyindex') => setIndexationMethod(value)} className="flex space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="speedyindex" id="speedyindex" disabled={!hasSpeedyIndexValidKey} />
+                          <Label htmlFor="speedyindex" className={!hasSpeedyIndexValidKey ? 'text-muted-foreground' : ''}>SpeedyIndex</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="ralfyindex" id="ralfyindex" disabled={!hasRalfyIndexValidKey} />
+                          <Label htmlFor="ralfyindex" className={!hasRalfyIndexValidKey ? 'text-muted-foreground' : ''}>RalfyIndex</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  )}
                   <Textarea
                     value={urls}
                     onChange={(e) => setUrls(e.target.value)}
