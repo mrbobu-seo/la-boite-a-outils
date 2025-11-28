@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function (request: any, response: any) {
+export default async function (request: VercelRequest, response: VercelResponse) {
     response.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
     const allowedMethods = ['POST'];
